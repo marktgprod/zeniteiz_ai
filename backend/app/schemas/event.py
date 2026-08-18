@@ -14,3 +14,8 @@ class EventSummaryOut(BaseModel):
     event_name: str
     count: int
     unique_users: int
+
+
+class RequestStatsOut(BaseModel):
+    today: int
+    total: int

@@ -16,7 +16,7 @@ export default function VideoPage() {
   const handleGenerate = async () => {
     if (!prompt.trim()) return
     haptic('light')
-    track('generate_click', { page: 'video', model: 'runway', duration_seconds: duration })
+    track('video_generate_click', { model: 'runway', duration_seconds: duration })
     setPending(true)
     setComingSoon(false)
     setError(null)

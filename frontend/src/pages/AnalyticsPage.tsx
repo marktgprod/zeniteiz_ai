@@ -9,23 +9,35 @@ interface EventSummary {
   unique_users: number
 }
 
+interface RequestStats {
+  today: number
+  total: number
+}
+
 const EVENT_LABELS: Record<string, string> = {
-  page_view: 'Просмотры разделов',
+  text_generate_click: 'Запросы на текст',
+  image_generate_click: 'Запросы на фото',
+  video_generate_click: 'Запросы на видео',
   prompt_copy: 'Копирование промптов',
-  generate_click: 'Клики «Сгенерировать»',
   upgrade_click: 'Клики на апгрейд тарифа',
   community_link_click: 'Переходы в сообщество',
 }
 
 export default function AnalyticsPage() {
   const [events, setEvents] = useState<EventSummary[]>([])
+  const [stats, setStats] = useState<RequestStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    api
-      .get<EventSummary[]>('/api/events/summary')
-      .then((res) => setEvents(res.data))
+    Promise.all([
+      api.get<EventSummary[]>('/api/events/summary'),
+      api.get<RequestStats>('/api/events/request-stats'),
+    ])
+      .then(([summaryRes, statsRes]) => {
+        setEvents(summaryRes.data.filter((e) => e.event_name in EVENT_LABELS))
+        setStats(statsRes.data)
+      })
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
@@ -41,6 +53,31 @@ export default function AnalyticsPage() {
 
       {error && <Notice tone="red">Не удалось загрузить аналитику. Убедитесь, что backend запущен.</Notice>}
 
+      <div className="grid grid-cols-2 gap-3">
+        {loading ? (
+          <>
+            <CardSkeleton />
+            <CardSkeleton />
+          </>
+        ) : (
+          <>
+            <Card className="text-left">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Запросов сегодня</p>
+              <p className="mt-1 text-2xl font-bold">{stats?.today ?? 0}</p>
+            </Card>
+            <Card className="text-left">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Запросов всего</p>
+              <p className="mt-1 text-2xl font-bold">{stats?.total ?? 0}</p>
+            </Card>
+          </>
+        )}
+      </div>
+      <p className="mt-2 text-xs text-gray-400">
+        Запрос = клик «Сгенерировать» на Текст/Фото/Видео. Пока не подключены ключи ИИ-провайдеров, это спрос, а не
+        готовые результаты.
+      </p>
+
+      <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">По типам событий</h2>
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {loading && Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
 

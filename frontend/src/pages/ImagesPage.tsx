@@ -21,7 +21,7 @@ export default function ImagesPage() {
   const handleGenerate = async () => {
     if (!prompt.trim()) return
     haptic('light')
-    track('generate_click', { page: 'images', model: model.id })
+    track('image_generate_click', { model: model.id })
     setPending(true)
     setComingSoon(false)
     setError(null)

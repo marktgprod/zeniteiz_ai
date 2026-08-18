@@ -22,7 +22,7 @@ export default function TextPage() {
   const handleSend = async () => {
     if (!prompt.trim()) return
     haptic('light')
-    track('generate_click', { page: 'text', model: model.id })
+    track('text_generate_click', { model: model.id })
     setPending(true)
     setResult(null)
     setComingSoon(false)
