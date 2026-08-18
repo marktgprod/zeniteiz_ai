@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_db
 from app.models.api_request import RequestType
 from app.schemas.generation import ImageGenerateRequest
+from app.models.api_request import ApiRequest
+from app.schemas.api_request import ApiRequestOut
 from app.services.history import get_request_history
 
 router = APIRouter(tags=["images"])
@@ -26,6 +28,6 @@ async def generate_prompt(payload: ImageGenerateRequest) -> dict:
     raise HTTPException(status_code=501, detail="Prompt generator pending (see week 3)")
 
 
-@router.get("/api/user/{user_id}/image-history")
-async def image_history(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list:
+@router.get("/api/user/{user_id}/image-history", response_model=list[ApiRequestOut])
+async def image_history(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list[ApiRequest]:
     return await get_request_history(db, user_id, RequestType.IMAGE)

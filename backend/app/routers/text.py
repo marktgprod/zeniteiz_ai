@@ -7,6 +7,7 @@ from app.db import get_db
 from app.models.api_request import ApiRequest, RequestStatus, RequestType
 from app.models.user import User
 from app.schemas.generation import TextGenerateRequest
+from app.schemas.api_request import ApiRequestOut
 from app.services.history import get_request_history
 from app.services.limits import REQUEST_LIMITS
 from app.services.openrouter import MODEL_SLUGS, OpenRouterError, chat_completion
@@ -69,6 +70,6 @@ async def generate_gpt4o(payload: TextGenerateRequest, db: AsyncSession = Depend
     return await _generate("gpt4o", payload, db)
 
 
-@router.get("/api/user/{user_id}/text-history")
-async def text_history(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list:
+@router.get("/api/user/{user_id}/text-history", response_model=list[ApiRequestOut])
+async def text_history(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> list[ApiRequest]:
     return await get_request_history(db, user_id, RequestType.TEXT)
