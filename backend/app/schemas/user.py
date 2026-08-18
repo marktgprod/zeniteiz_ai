@@ -21,5 +21,7 @@ class UserOut(BaseModel):
     username: str | None
     first_name: str | None
     subscription_tier: SubscriptionTier
+    subscription_expires_at: datetime | None
+    requests_today: int
 
     model_config = {"from_attributes": True}

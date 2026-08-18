@@ -1,10 +1,20 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.db import init_db
 from app.routers import auth, images, news, payments, prompts, text, video
 
-app = FastAPI(title="AI All-in-One Hub API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+
+app = FastAPI(title="AI All-in-One Hub API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

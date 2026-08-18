@@ -1,13 +1,13 @@
 import uuid
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
 from app.deps import get_current_telegram_user, get_user_or_404
 from app.models.user import User
 from app.schemas.user import SubscriptionOut, UserOut
+from app.services.user import get_or_create_user
 
 router = APIRouter(tags=["auth"])
 
@@ -18,19 +18,7 @@ async def login(
     db: AsyncSession = Depends(get_db),
 ) -> User:
     tg_user = telegram_data["user"]
-    result = await db.execute(select(User).where(User.telegram_user_id == tg_user["id"]))
-    user = result.scalar_one_or_none()
-
-    if user is None:
-        user = User(
-            telegram_user_id=tg_user["id"],
-            username=tg_user.get("username"),
-            first_name=tg_user.get("first_name"),
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-
+    user, _ = await get_or_create_user(db, tg_user["id"], tg_user.get("username"), tg_user.get("first_name"))
     return user
 
 

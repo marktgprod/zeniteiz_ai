@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Home from './pages/Home'
@@ -8,8 +9,13 @@ import PromptsPage from './pages/PromptsPage'
 import NewsPage from './pages/NewsPage'
 import CommunityPage from './pages/CommunityPage'
 import ProfilePage from './pages/ProfilePage'
+import { loginIfInTelegram } from './lib/auth'
 
 export default function App() {
+  useEffect(() => {
+    loginIfInTelegram()
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>

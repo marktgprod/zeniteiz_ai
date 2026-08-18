@@ -5,7 +5,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     telegram_bot_token: str = ""
-    database_url: str = "postgresql+asyncpg://user:password@localhost:5432/ai_hub"
+    telegram_admin_chat_id: int = 0
+    mini_app_url: str = "https://example.com/app"
+
+    database_url: str = "sqlite+aiosqlite:///./dev.db"
     redis_url: str = "redis://localhost:6379/0"
 
     openrouter_api_key: str = ""
