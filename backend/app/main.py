@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="AI All-in-One Hub API", lifespan=lifespan)
+app = FastAPI(title="Zeniteiz Ai API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

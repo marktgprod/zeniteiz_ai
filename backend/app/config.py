@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,7 +6,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     telegram_bot_token: str = ""
-    telegram_admin_chat_id: int = 0
+    telegram_admin_chat_id: int | None = None
     mini_app_url: str = "https://example.com/app"
 
     database_url: str = "sqlite+aiosqlite:///./dev.db"
@@ -19,6 +20,11 @@ class Settings(BaseSettings):
     tribute_webhook_secret: str = ""
 
     cors_origins: list[str] = ["http://localhost:5173"]
+
+    @field_validator("telegram_admin_chat_id", mode="before")
+    @classmethod
+    def _empty_str_to_none(cls, value: object) -> object:
+        return None if value == "" else value
 
 
 settings = Settings()
