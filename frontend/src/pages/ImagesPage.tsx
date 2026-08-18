@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { ImageIcon, Wand2 } from 'lucide-react'
 import { api } from '../lib/api'
+import { inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
 
 const MODELS = [
   { id: 'flux', label: 'Flux.1 Pro', endpoint: '/api/image/flux' },
@@ -34,53 +36,48 @@ export default function ImagesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-xl font-semibold">Изображения</h1>
+    <div className="mx-auto max-w-lg px-4 py-5">
+      <PageHeader title="Изображения" />
 
-      <div className="mt-3 flex gap-2">
-        {MODELS.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setModel(m)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-              model.id === m.id ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        options={MODELS.map((m) => ({ id: m.id, label: m.label }))}
+        value={model.id}
+        onChange={(id) => setModel(MODELS.find((m) => m.id === id)!)}
+      />
 
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Опишите изображение..."
         rows={3}
-        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+        className={`mt-3 ${inputClasses}`}
       />
 
-      <button
+      <PrimaryButton
         onClick={handleGenerate}
         disabled={pending || !prompt.trim()}
-        className="mt-3 w-full rounded-lg bg-purple-600 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="mt-3 flex w-full items-center justify-center gap-2"
       >
+        <Wand2 size={15} />
         {pending ? 'Генерация...' : 'Сгенерировать'}
-      </button>
+      </PrimaryButton>
 
-      {comingSoon && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-          Интеграция с {model.label} ещё не подключена — появится после настройки API ключа.
-        </p>
-      )}
-      {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
+      <div className="mt-4 space-y-3">
+        {comingSoon && (
+          <Notice tone="amber">
+            Интеграция с {model.label} ещё не подключена — появится после настройки API ключа.
+          </Notice>
+        )}
+        {error && <Notice tone="red">{error}</Notice>}
+      </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-2">
+      <div className="mt-6 grid grid-cols-2 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="flex aspect-square items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400 dark:bg-gray-900"
+            className="flex aspect-square items-center justify-center rounded-2xl border border-dashed border-gray-200 text-gray-300 dark:border-white/10 dark:text-gray-700"
           >
-            Пусто
+            <ImageIcon size={22} strokeWidth={1.5} />
           </div>
         ))}
       </div>

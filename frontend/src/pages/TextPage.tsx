@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { Send } from 'lucide-react'
 import { api } from '../lib/api'
+import { Card, inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
 
 const MODELS = [
   { id: 'claude', label: 'Claude Sonnet 5', endpoint: '/api/text/claude' },
@@ -37,50 +39,37 @@ export default function TextPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-xl font-semibold">Текст и рассуждение</h1>
+    <div className="mx-auto max-w-lg px-4 py-5">
+      <PageHeader title="Текст и рассуждение" />
 
-      <div className="mt-3 flex gap-2">
-        {MODELS.map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setModel(m)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-              model.id === m.id ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        options={MODELS.map((m) => ({ id: m.id, label: m.label }))}
+        value={model.id}
+        onChange={(id) => setModel(MODELS.find((m) => m.id === id)!)}
+      />
 
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
         placeholder="Напишите запрос..."
         rows={5}
-        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
+        className={`mt-3 ${inputClasses}`}
       />
 
-      <button
-        onClick={handleSend}
-        disabled={pending || !prompt.trim()}
-        className="mt-3 w-full rounded-lg bg-purple-600 py-2 text-sm font-medium text-white disabled:opacity-50"
-      >
+      <PrimaryButton onClick={handleSend} disabled={pending || !prompt.trim()} className="mt-3 flex w-full items-center justify-center gap-2">
+        <Send size={15} />
         {pending ? 'Отправка...' : 'Отправить'}
-      </button>
+      </PrimaryButton>
 
-      {comingSoon && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-          Интеграция с {model.label} ещё не подключена — появится после настройки OpenRouter API ключа.
-        </p>
-      )}
-      {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
-      {result && (
-        <div className="mt-4 whitespace-pre-wrap rounded-lg border border-gray-200 p-3 text-left text-sm dark:border-gray-800">
-          {result}
-        </div>
-      )}
+      <div className="mt-4 space-y-3">
+        {comingSoon && (
+          <Notice tone="amber">
+            Интеграция с {model.label} ещё не подключена — появится после настройки OpenRouter API ключа.
+          </Notice>
+        )}
+        {error && <Notice tone="red">{error}</Notice>}
+        {result && <Card className="whitespace-pre-wrap text-left text-sm">{result}</Card>}
+      </div>
     </div>
   )
 }

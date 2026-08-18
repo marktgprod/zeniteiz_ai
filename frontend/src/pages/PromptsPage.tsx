@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Check, Copy, Search, SearchX } from 'lucide-react'
 import { api } from '../lib/api'
 import { CATEGORY_LABELS, type Prompt } from '../lib/types'
+import { Card, inputClasses, Notice, PageHeader } from '../components/ui'
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
@@ -34,22 +36,27 @@ export default function PromptsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-xl font-semibold">Промпты</h1>
+    <div className="mx-auto max-w-lg px-4 py-5">
+      <PageHeader title="Промпты" />
 
-      <input
-        type="text"
-        placeholder="Поиск по промптам..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700 dark:bg-gray-900"
-      />
+      <div className="relative">
+        <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Поиск по промптам..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className={`${inputClasses} pl-9`}
+        />
+      </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={() => setCategory(null)}
-          className={`rounded-full px-3 py-1 text-xs font-medium ${
-            category === null ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            category === null
+              ? 'bg-black text-white dark:bg-white dark:text-black'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
           }`}
         >
           Все
@@ -58,8 +65,10 @@ export default function PromptsPage() {
           <button
             key={c}
             onClick={() => setCategory(c)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              category === c ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              category === c
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
             }`}
           >
             {CATEGORY_LABELS[c] ?? c}
@@ -69,31 +78,35 @@ export default function PromptsPage() {
 
       {loading && <p className="mt-6 text-sm text-gray-500">Загрузка...</p>}
       {error && (
-        <p className="mt-6 text-sm text-red-500">
-          Не удалось загрузить промпты. Убедитесь, что backend запущен на VITE_API_URL.
-        </p>
+        <div className="mt-6">
+          <Notice tone="red">Не удалось загрузить промпты. Убедитесь, что backend запущен на VITE_API_URL.</Notice>
+        </div>
       )}
 
       <div className="mt-4 space-y-3">
         {filtered.map((prompt) => (
-          <div key={prompt.id} className="rounded-xl border border-gray-200 p-4 text-left dark:border-gray-800">
+          <Card key={prompt.id} className="text-left">
             <div className="flex items-start justify-between gap-2">
-              <h2 className="font-medium">{prompt.title}</h2>
-              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-800">
+              <h2 className="font-semibold">{prompt.title}</h2>
+              <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-white/5 dark:text-gray-400">
                 {CATEGORY_LABELS[prompt.category] ?? prompt.category}
               </span>
             </div>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{prompt.description}</p>
             <button
               onClick={() => handleCopy(prompt)}
-              className="mt-3 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-purple-700"
+              className="mt-3 flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-900 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
             >
-              {copiedId === prompt.id ? 'Скопировано ✓' : 'Скопировать промпт'}
+              {copiedId === prompt.id ? <Check size={13} /> : <Copy size={13} />}
+              {copiedId === prompt.id ? 'Скопировано' : 'Скопировать промпт'}
             </button>
-          </div>
+          </Card>
         ))}
         {!loading && !error && filtered.length === 0 && (
-          <p className="text-sm text-gray-500">Ничего не найдено.</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-gray-600">
+            <SearchX size={28} strokeWidth={1.5} />
+            <p className="text-sm">Ничего не найдено</p>
+          </div>
         )}
       </div>
     </div>

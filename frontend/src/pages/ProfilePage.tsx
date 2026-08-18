@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { Check } from 'lucide-react'
 import { api } from '../lib/api'
 import { useUserStore, type SubscriptionTier } from '../store/userStore'
+import { Notice, PageHeader, PrimaryButton } from '../components/ui'
 
 const TIERS: {
   id: SubscriptionTier
@@ -56,45 +58,68 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-xl font-semibold">Профиль и подписка</h1>
-      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        Текущий тариф: <span className="font-medium text-gray-900 dark:text-gray-100">{subscriptionTier}</span> ·
-        запросов сегодня: {requestsToday}
+    <div className="mx-auto max-w-lg px-4 py-5">
+      <PageHeader title="Профиль и подписка" />
+      <p className="-mt-3 mb-4 text-sm text-gray-500 dark:text-gray-400">
+        Тариф: <span className="font-medium text-gray-900 dark:text-gray-100">{subscriptionTier}</span> · запросов
+        сегодня: {requestsToday}
       </p>
 
       {notice && (
-        <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-300">
-          {notice}
-        </p>
+        <div className="mb-4">
+          <Notice tone="amber">{notice}</Notice>
+        </div>
       )}
 
-      <div className="mt-4 space-y-3">
+      <div className="space-y-3">
         {TIERS.map((tier) => {
           const isCurrent = subscriptionTier === tier.id
+          const isVip = tier.id === 'VIP'
           return (
             <div
               key={tier.id}
-              className={`rounded-xl border p-4 text-left ${
-                isCurrent ? 'border-purple-500' : 'border-gray-200 dark:border-gray-800'
+              className={`rounded-2xl border p-4 text-left shadow-sm ${
+                isVip
+                  ? 'border-transparent bg-black text-white dark:bg-white dark:text-black'
+                  : isCurrent
+                    ? 'border-black bg-white dark:border-white dark:bg-white/[0.03]'
+                    : 'border-gray-200 bg-white dark:border-white/5 dark:bg-white/[0.03]'
               }`}
             >
               <div className="flex items-baseline justify-between">
                 <h2 className="font-semibold">{tier.name}</h2>
-                <span className="text-sm text-gray-500">{tier.price}</span>
+                <span className={`text-sm ${isVip ? 'text-white/70 dark:text-black/60' : 'text-gray-500 dark:text-gray-400'}`}>
+                  {tier.price}
+                </span>
               </div>
-              <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-300">
+              <ul className="mt-3 space-y-1.5 text-sm">
                 {tier.features.map((f) => (
-                  <li key={f}>· {f}</li>
+                  <li
+                    key={f}
+                    className={`flex items-start gap-2 ${isVip ? 'text-white/85 dark:text-black/80' : 'text-gray-600 dark:text-gray-300'}`}
+                  >
+                    <Check size={15} className={`mt-0.5 shrink-0 ${isVip ? 'text-white dark:text-black' : 'text-gray-900 dark:text-white'}`} />
+                    {f}
+                  </li>
                 ))}
               </ul>
-              <button
-                onClick={() => handleUpgrade(tier.id)}
-                disabled={isCurrent || pendingTier === tier.id}
-                className="mt-3 w-full rounded-lg bg-purple-600 py-2 text-sm font-medium text-white disabled:opacity-50"
-              >
-                {isCurrent ? 'Текущий тариф' : pendingTier === tier.id ? 'Оформление...' : `Выбрать ${tier.name}`}
-              </button>
+              {isVip ? (
+                <button
+                  onClick={() => handleUpgrade(tier.id)}
+                  disabled={isCurrent || pendingTier === tier.id}
+                  className="mt-4 w-full rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-85 disabled:opacity-50 dark:bg-black dark:text-white"
+                >
+                  {isCurrent ? 'Текущий тариф' : pendingTier === tier.id ? 'Оформление...' : `Выбрать ${tier.name}`}
+                </button>
+              ) : (
+                <PrimaryButton
+                  onClick={() => handleUpgrade(tier.id)}
+                  disabled={isCurrent || pendingTier === tier.id}
+                  className="mt-4 w-full"
+                >
+                  {isCurrent ? 'Текущий тариф' : pendingTier === tier.id ? 'Оформление...' : `Выбрать ${tier.name}`}
+                </PrimaryButton>
+              )}
             </div>
           )
         })}

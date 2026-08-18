@@ -1,3 +1,6 @@
+import { ChevronDown, MessagesSquare } from 'lucide-react'
+import { PageHeader } from '../components/ui'
+
 const FAQ = [
   {
     q: 'Как продлить подписку?',
@@ -15,26 +18,35 @@ const FAQ = [
 
 export default function CommunityPage() {
   return (
-    <div className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-xl font-semibold">Сообщество</h1>
+    <div className="mx-auto max-w-lg px-4 py-5">
+      <PageHeader title="Сообщество" />
 
       <a
         href="https://t.me/+your_channel_here"
         target="_blank"
         rel="noreferrer"
-        className="mt-3 block rounded-xl border border-purple-200 bg-purple-50 p-4 text-left dark:border-purple-900 dark:bg-purple-950"
+        className="flex items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition-opacity hover:opacity-85 dark:bg-white dark:text-black"
       >
-        <p className="font-medium text-purple-700 dark:text-purple-300">Закрытая группа для подписчиков</p>
-        <p className="mt-1 text-sm text-purple-600 dark:text-purple-400">
-          Обсуждения, поддержка и анонсы новых функций →
-        </p>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 dark:bg-black/10">
+          <MessagesSquare size={18} />
+        </div>
+        <div>
+          <p className="font-semibold">Закрытая группа для подписчиков</p>
+          <p className="mt-0.5 text-sm text-white/75 dark:text-black/65">Обсуждения, поддержка и анонсы новых функций →</p>
+        </div>
       </a>
 
-      <h2 className="mt-6 text-sm font-semibold text-gray-500 dark:text-gray-400">FAQ</h2>
-      <div className="mt-2 space-y-2">
+      <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">FAQ</h2>
+      <div className="space-y-2">
         {FAQ.map((item) => (
-          <details key={item.q} className="rounded-lg border border-gray-200 p-3 text-left dark:border-gray-800">
-            <summary className="cursor-pointer text-sm font-medium">{item.q}</summary>
+          <details
+            key={item.q}
+            className="group rounded-2xl border border-gray-200 bg-white p-3.5 text-left shadow-sm dark:border-white/5 dark:bg-white/[0.03]"
+          >
+            <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium">
+              {item.q}
+              <ChevronDown size={16} className="text-gray-400 transition-transform group-open:rotate-180" />
+            </summary>
             <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{item.a}</p>
           </details>
         ))}

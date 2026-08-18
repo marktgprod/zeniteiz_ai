@@ -2,9 +2,22 @@
 
 :root {
   color-scheme: light dark;
+  background: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background: #000000;
+  }
 }
 
 body {
   margin: 0;
+  background: inherit;
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
 }
