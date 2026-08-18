@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { MessageSquare, Image, Video, Sparkles, ArrowRight } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
-import { isRunningInTelegram } from '../lib/telegram'
+import { isRunningInTelegram, WebApp } from '../lib/telegram'
 
 const QUICK_ACTIONS = [
   { to: '/text', label: 'Текст', hint: 'Claude · GPT-4o mini', icon: MessageSquare },
@@ -11,7 +11,7 @@ const QUICK_ACTIONS = [
 ]
 
 export default function Home() {
-  const { requestsToday, authChecked } = useUserStore()
+  const { id, requestsToday, authChecked } = useUserStore()
   const inTelegram = isRunningInTelegram()
 
   return (
@@ -28,6 +28,20 @@ export default function Home() {
           Вы открыли приложение вне Telegram — для сохранения подписки и лимитов откройте его через бота.
         </p>
       )}
+
+      {/* TEMPORARY debug panel — remove once the auth issue is confirmed fixed */}
+      <div className="mt-3 space-y-1 rounded-xl border border-dashed border-gray-300 p-3 text-left font-mono text-[10px] leading-tight text-gray-500 dark:border-gray-700 dark:text-gray-400">
+        <p>window.Telegram: {String(Boolean(window.Telegram))}</p>
+        <p>WebApp exists: {String(Boolean(WebApp))}</p>
+        <p>WebApp.platform: {String(WebApp?.platform)}</p>
+        <p>WebApp.version: {String(WebApp?.version)}</p>
+        <p>initData length: {String(WebApp?.initData?.length ?? 'n/a')}</p>
+        <p>initDataUnsafe.user: {JSON.stringify(WebApp?.initDataUnsafe?.user ?? null)}</p>
+        <p>authChecked: {String(authChecked)}</p>
+        <p>store id: {String(id)}</p>
+        <p>location.hash len: {window.location.hash.length}</p>
+        <p>location.search: {window.location.search || '(empty)'}</p>
+      </div>
 
       <h2 className="mt-6 mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400">Быстрые действия</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
