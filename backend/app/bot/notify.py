@@ -6,16 +6,10 @@ from aiogram import Bot
 from sqlalchemy import select
 
 from app.db import async_session
-from app.models.user import SubscriptionTier, User
+from app.models.user import User
+from app.services.limits import REQUEST_LIMITS
 
 logger = logging.getLogger(__name__)
-
-REQUEST_LIMITS = {
-    SubscriptionTier.FREE: 0,
-    SubscriptionTier.STARTER: 50,
-    SubscriptionTier.PRO: 100,
-    SubscriptionTier.VIP: 5000,
-}
 
 CHECK_INTERVAL_SECONDS = 24 * 60 * 60
 

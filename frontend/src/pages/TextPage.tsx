@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { Card, inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { useUserStore } from '../store/userStore'
 
 const MODELS = [
   { id: 'claude', label: 'Claude Sonnet 5', endpoint: '/api/text/claude' },
@@ -12,34 +13,42 @@ const MODELS = [
 ] as const
 
 export default function TextPage() {
+  const userId = useUserStore((s) => s.id)
   const [model, setModel] = useState<(typeof MODELS)[number]>(MODELS[0])
   const [prompt, setPrompt] = useState('')
   const [result, setResult] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
-  const [comingSoon, setComingSoon] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSend = async () => {
     if (!prompt.trim()) return
     haptic('light')
     track('text_generate_click', { model: model.id })
+
+    if (!userId) {
+      setError('Откройте приложение через Telegram-бота, чтобы отправлять запросы.')
+      return
+    }
+
     setPending(true)
     setResult(null)
-    setComingSoon(false)
     setError(null)
 
     try {
-      const res = await api.post(model.endpoint, { user_id: 'demo', prompt })
+      const res = await api.post(model.endpoint, { user_id: userId, prompt })
       setResult(res.data.text ?? JSON.stringify(res.data))
       haptic('success')
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 501) {
-        setComingSoon(true)
-        haptic('warning')
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        setError('Текст доступен с тарифа Starter — оформите подписку в профиле.')
+      } else if (axios.isAxiosError(err) && err.response?.status === 429) {
+        setError('Дневной лимит запросов исчерпан. Лимит обновится завтра или повысьте тариф.')
+      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail)
       } else {
         setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
-        haptic('error')
       }
+      haptic('error')
     } finally {
       setPending(false)
     }
@@ -69,11 +78,6 @@ export default function TextPage() {
       </PrimaryButton>
 
       <div className="mt-4 space-y-3">
-        {comingSoon && (
-          <Notice tone="amber">
-            Интеграция с {model.label} ещё не подключена — появится после настройки OpenRouter API ключа.
-          </Notice>
-        )}
         {error && <Notice tone="red">{error}</Notice>}
         {result && <Card className="whitespace-pre-wrap text-left text-sm">{result}</Card>}
       </div>
