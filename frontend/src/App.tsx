@@ -10,6 +10,7 @@ import NewsPage from './pages/NewsPage'
 import CommunityPage from './pages/CommunityPage'
 import ProfilePage from './pages/ProfilePage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import ErrorBoundary from './components/ErrorBoundary'
 import { loginIfInTelegram } from './lib/auth'
 
 export default function App() {
@@ -18,20 +19,22 @@ export default function App() {
   }, [])
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="text" element={<TextPage />} />
-          <Route path="images" element={<ImagesPage />} />
-          <Route path="video" element={<VideoPage />} />
-          <Route path="prompts" element={<PromptsPage />} />
-          <Route path="news" element={<NewsPage />} />
-          <Route path="community" element={<CommunityPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="analytics" element={<AnalyticsPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="text" element={<TextPage />} />
+            <Route path="images" element={<ImagesPage />} />
+            <Route path="video" element={<VideoPage />} />
+            <Route path="prompts" element={<PromptsPage />} />
+            <Route path="news" element={<NewsPage />} />
+            <Route path="community" element={<CommunityPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }
