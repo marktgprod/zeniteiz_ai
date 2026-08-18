@@ -23,19 +23,6 @@ async def lifespan(app: FastAPI):
         app.state.bot = bot
         app.state.dispatcher = dp
 
-        webhook_url = f"{settings.webhook_base_url.rstrip('/')}/telegram/webhook"
-        try:
-            await bot.set_webhook(
-                url=webhook_url,
-                secret_token=settings.telegram_webhook_secret or None,
-            )
-            logger.info("Telegram webhook set to %s", webhook_url)
-        except Exception:
-            # Telegram's API having a bad moment (or a network blip) must not take
-            # the whole backend down — the webhook is already registered from a
-            # previous successful cold start and doesn't need to be re-set every time.
-            logger.exception("Failed to (re-)set Telegram webhook; continuing without retrying")
-
         yield
         await bot.session.close()
     else:
