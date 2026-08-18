@@ -18,13 +18,13 @@ export default function NewsPage() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5">
+    <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title="Новости ИИ" />
 
       {error && <Notice tone="red">Не удалось загрузить новости. Убедитесь, что backend запущен на VITE_API_URL.</Notice>}
 
-      <div className="space-y-3">
-        {loading && Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)}
+      <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+        {loading && Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
 
         {!loading &&
           news.map((item) => (
@@ -59,7 +59,7 @@ export default function NewsPage() {
           ))}
 
         {!loading && !error && news.length === 0 && (
-          <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-gray-600">
+          <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-gray-600 lg:col-span-2">
             <Inbox size={28} strokeWidth={1.5} />
             <p className="text-sm">Пока нет новостей</p>
           </div>

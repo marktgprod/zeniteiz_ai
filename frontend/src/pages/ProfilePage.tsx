@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { Check } from 'lucide-react'
+import { Check, ChevronRight, BarChart3 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useUserStore, type SubscriptionTier } from '../store/userStore'
 import { Notice, PageHeader, PrimaryButton } from '../components/ui'
@@ -66,7 +67,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5">
+    <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title="Профиль и подписка" />
       <p className="-mt-3 mb-4 text-sm text-gray-500 dark:text-gray-400">
         Тариф: <span className="font-medium text-gray-900 dark:text-gray-100">{subscriptionTier}</span> · запросов
@@ -79,7 +80,7 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">
         {TIERS.map((tier) => {
           const isCurrent = subscriptionTier === tier.id
           const isVip = tier.id === 'VIP'
@@ -132,6 +133,21 @@ export default function ProfilePage() {
           )
         })}
       </div>
+
+      <Link
+        to="/analytics"
+        onClick={() => haptic('light')}
+        className="mt-6 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-gray-400 dark:border-white/5 dark:bg-white/[0.03] dark:hover:border-white/30"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white">
+          <BarChart3 size={16} />
+        </div>
+        <div className="flex-1">
+          <p className="font-medium">Аналитика использования</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Видно только вам</p>
+        </div>
+        <ChevronRight size={16} className="text-gray-300 dark:text-gray-600" />
+      </Link>
     </div>
   )
 }

@@ -15,7 +15,7 @@ export default function Home() {
   const inTelegram = isRunningInTelegram()
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5">
+    <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <div className="relative overflow-hidden rounded-2xl bg-black p-5 text-white shadow-lg dark:bg-white dark:text-black">
         <div className="pointer-events-none absolute -right-6 -top-10 h-32 w-32 rounded-full bg-white/10 blur-2xl dark:bg-black/5" />
         <p className="text-sm font-medium text-white/70 dark:text-black/60">Добро пожаловать</p>
@@ -30,7 +30,7 @@ export default function Home() {
       )}
 
       <h2 className="mt-6 mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400">Быстрые действия</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {QUICK_ACTIONS.map((action) => {
           const Icon = action.icon
           return (

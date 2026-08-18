@@ -46,7 +46,7 @@ export default function TextPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5">
+    <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title="Текст и рассуждение" />
 
       <SegmentedTabs

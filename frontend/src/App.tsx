@@ -9,6 +9,7 @@ import PromptsPage from './pages/PromptsPage'
 import NewsPage from './pages/NewsPage'
 import CommunityPage from './pages/CommunityPage'
 import ProfilePage from './pages/ProfilePage'
+import AnalyticsPage from './pages/AnalyticsPage'
 import { loginIfInTelegram } from './lib/auth'
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="news" element={<NewsPage />} />
           <Route path="community" element={<CommunityPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
