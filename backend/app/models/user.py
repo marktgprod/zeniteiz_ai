@@ -31,5 +31,8 @@ class User(Base):
     requests_today: Mapped[int] = mapped_column(Integer, default=0)
     requests_month: Mapped[int] = mapped_column(Integer, default=0)
 
+    last_expiry_reminder_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_limit_reminder_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_active: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

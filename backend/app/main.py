@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -6,11 +5,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.bot.dispatcher import create_bot, create_dispatcher
-from app.bot.notify import run_daily_notifications
 from app.bot.webhook import router as webhook_router
 from app.config import settings
 from app.db import init_db
-from app.routers import auth, events, images, news, payments, prompts, text, video
+from app.routers import auth, cron, events, images, news, payments, prompts, text, video
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +31,7 @@ async def lifespan(app: FastAPI):
         )
         logger.info("Telegram webhook set to %s", webhook_url)
 
-        notify_task = asyncio.create_task(run_daily_notifications(bot))
         yield
-        notify_task.cancel()
         await bot.session.close()
     else:
         yield
@@ -59,6 +55,7 @@ app.include_router(prompts.router)
 app.include_router(news.router)
 app.include_router(payments.router)
 app.include_router(events.router)
+app.include_router(cron.router)
 
 if settings.webhook_base_url:
     app.include_router(webhook_router)

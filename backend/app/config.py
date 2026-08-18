@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     webhook_base_url: str = ""
     telegram_webhook_secret: str = ""
 
+    # Set automatically by Vercel Cron Jobs; verified against the Authorization
+    # header on /api/cron/notifications so it can't be triggered by anyone else.
+    cron_secret: str = ""
+
     database_url: str = "sqlite+aiosqlite:///./dev.db"
     redis_url: str = "redis://localhost:6379/0"
 

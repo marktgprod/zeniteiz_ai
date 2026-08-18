@@ -2,10 +2,18 @@ import asyncio
 import logging
 
 from app.bot.dispatcher import create_bot, create_dispatcher
-from app.bot.notify import run_daily_notifications
+from app.bot.notify import run_notification_check
 from app.db import init_db
 
 logging.basicConfig(level=logging.INFO)
+
+CHECK_INTERVAL_SECONDS = 24 * 60 * 60
+
+
+async def _notification_loop(bot) -> None:
+    while True:
+        await asyncio.sleep(CHECK_INTERVAL_SECONDS)
+        await run_notification_check(bot)
 
 
 async def main() -> None:
@@ -14,7 +22,7 @@ async def main() -> None:
     bot = create_bot()
     dp = create_dispatcher(bot)
 
-    asyncio.create_task(run_daily_notifications(bot))
+    asyncio.create_task(_notification_loop(bot))
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
