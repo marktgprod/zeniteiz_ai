@@ -15,7 +15,11 @@ export function initTelegram() {
 }
 
 export function isRunningInTelegram(): boolean {
-  return Boolean(WebApp.initData)
+  // initData is the primary signal, but platform is set by the Telegram client
+  // independently of it (and defaults to 'unknown' outside Telegram) — checking
+  // both guards against edge cases where initData alone comes back empty even
+  // though we're genuinely running inside a Telegram WebView.
+  return Boolean(WebApp.initData) || Boolean(WebApp.initDataUnsafe?.user) || WebApp.platform !== 'unknown'
 }
 
 export function getInitData(): string {

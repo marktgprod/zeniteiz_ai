@@ -32,15 +32,23 @@ async def cmd_start(message: Message) -> None:
             db, message.from_user.id, message.from_user.username, message.from_user.first_name
         )
 
+    name = message.from_user.first_name or (f"@{message.from_user.username}" if message.from_user.username else "друг")
+    features = (
+        "💬 <b>Текст</b> — Claude Sonnet 5, GPT-4o mini\n"
+        "🎨 <b>Фото</b> — Flux.1 Pro, DALL-E 3\n"
+        "🎬 <b>Видео</b> — Runway Gen-3\n"
+        "✨ <b>Промпты</b> — библиотека готовых запросов"
+    )
+
     if is_new:
         text = (
-            f"Привет, {message.from_user.first_name}! 👋\n\n"
-            "Вам открыт бесплатный пробный доступ уровня Starter на 3 дня — "
-            "Claude, GPT-4o mini и библиотека промптов уже доступны.\n\n"
-            "Нажмите кнопку ниже, чтобы открыть приложение."
+            f"Привет, {name}! 👋\n\n"
+            f"Добро пожаловать в Zeniteiz Ai — всё это доступно в одном приложении:\n\n"
+            f"{features}\n\n"
+            "Вам открыт бесплатный доступ уровня Starter на 3 дня. Нажмите кнопку ниже, чтобы начать."
         )
     else:
-        text = "С возвращением! Откройте приложение, чтобы продолжить."
+        text = f"С возвращением, {name}! 👋\n\nНапомню, что доступно:\n\n{features}\n\nОткройте приложение, чтобы продолжить."
 
     await message.answer(text, reply_markup=_webapp_keyboard())
 
