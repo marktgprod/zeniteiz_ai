@@ -1,3 +1,4 @@
+from aiogram.exceptions import TelegramAPIError
 from fastapi import APIRouter, Header, HTTPException
 
 from app.bot.dispatcher import create_bot
@@ -38,11 +39,14 @@ async def set_webhook(authorization: str = Header(default="")) -> dict:
     bot = create_bot()
     try:
         webhook_url = f"{settings.webhook_base_url.rstrip('/')}/telegram/webhook"
-        await bot.set_webhook(
-            url=webhook_url,
-            secret_token=settings.telegram_webhook_secret or None,
-            request_timeout=10,
-        )
+        try:
+            await bot.set_webhook(
+                url=webhook_url,
+                secret_token=settings.telegram_webhook_secret or None,
+                request_timeout=10,
+            )
+        except TelegramAPIError as exc:
+            raise HTTPException(status_code=502, detail=f"Telegram API unavailable: {exc}") from exc
         return {"ok": True, "webhook_url": webhook_url}
     finally:
         await bot.session.close()
