@@ -9,6 +9,13 @@ class Settings(BaseSettings):
     telegram_admin_chat_id: int | None = None
     mini_app_url: str = "https://example.com/app"
 
+    # When set, the FastAPI app itself registers a Telegram webhook and handles
+    # bot updates in-process instead of a separate polling process (bot/main.py).
+    # Needed for hosts that sleep/scale-to-zero, where a long-lived polling loop
+    # can't run reliably. Leave empty for local dev — keep using `python -m app.bot.main`.
+    webhook_base_url: str = ""
+    telegram_webhook_secret: str = ""
+
     database_url: str = "sqlite+aiosqlite:///./dev.db"
     redis_url: str = "redis://localhost:6379/0"
 
