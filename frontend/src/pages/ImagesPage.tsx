@@ -3,6 +3,8 @@ import axios from 'axios'
 import { ImageIcon, Wand2 } from 'lucide-react'
 import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 const MODELS = [
   { id: 'flux', label: 'Flux.1 Pro', endpoint: '/api/image/flux' },
@@ -18,17 +20,22 @@ export default function ImagesPage() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
+    haptic('light')
+    track('generate_click', { page: 'images', model: model.id })
     setPending(true)
     setComingSoon(false)
     setError(null)
 
     try {
       await api.post(model.endpoint, { user_id: 'demo', prompt, size: '1024x1024', count: 1 })
+      haptic('success')
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 501) {
         setComingSoon(true)
+        haptic('warning')
       } else {
         setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
+        haptic('error')
       }
     } finally {
       setPending(false)

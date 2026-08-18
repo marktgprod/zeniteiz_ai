@@ -64,5 +64,23 @@ export function SegmentedTabs<T extends string>({
   )
 }
 
+export function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse rounded-lg bg-gray-100 dark:bg-white/5 ${className}`} />
+}
+
+export function CardSkeleton() {
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-2">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-4 w-12 rounded-full" />
+      </div>
+      <Skeleton className="mt-2 h-3 w-full" />
+      <Skeleton className="mt-1.5 h-3 w-4/5" />
+      <Skeleton className="mt-3 h-7 w-32 rounded-lg" />
+    </Card>
+  )
+}
+
 export const inputClasses =
   'w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-white/10 dark:bg-white/[0.03] dark:placeholder:text-gray-500 dark:focus:border-white dark:focus:ring-white/10'

@@ -4,6 +4,8 @@ import { Check } from 'lucide-react'
 import { api } from '../lib/api'
 import { useUserStore, type SubscriptionTier } from '../store/userStore'
 import { Notice, PageHeader, PrimaryButton } from '../components/ui'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 const TIERS: {
   id: SubscriptionTier
@@ -37,6 +39,9 @@ export default function ProfilePage() {
   const [notice, setNotice] = useState<string | null>(null)
 
   const handleUpgrade = async (tier: SubscriptionTier) => {
+    haptic('light')
+    track('upgrade_click', { tier })
+
     if (!id) {
       setNotice('Откройте приложение через Telegram-бота, чтобы оформить подписку.')
       return
@@ -46,11 +51,14 @@ export default function ProfilePage() {
     setNotice(null)
     try {
       await api.post(`/api/user/${id}/upgrade`, null, { params: { tier } })
+      haptic('success')
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 501) {
         setNotice('Оплата через Tribute ещё не подключена — появится на следующем этапе.')
+        haptic('warning')
       } else {
         setNotice('Не удалось начать оформление подписки.')
+        haptic('error')
       }
     } finally {
       setPendingTier(null)

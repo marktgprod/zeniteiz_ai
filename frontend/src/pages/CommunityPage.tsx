@@ -1,5 +1,7 @@
 import { ChevronDown, MessagesSquare } from 'lucide-react'
 import { PageHeader } from '../components/ui'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 const FAQ = [
   {
@@ -25,6 +27,10 @@ export default function CommunityPage() {
         href="https://t.me/+your_channel_here"
         target="_blank"
         rel="noreferrer"
+        onClick={() => {
+          haptic('light')
+          track('community_link_click')
+        }}
         className="flex items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition-opacity hover:opacity-85 dark:bg-white dark:text-black"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 dark:bg-black/10">

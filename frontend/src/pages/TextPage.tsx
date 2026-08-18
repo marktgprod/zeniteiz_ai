@@ -3,6 +3,8 @@ import axios from 'axios'
 import { Send } from 'lucide-react'
 import { api } from '../lib/api'
 import { Card, inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 const MODELS = [
   { id: 'claude', label: 'Claude Sonnet 5', endpoint: '/api/text/claude' },
@@ -19,6 +21,8 @@ export default function TextPage() {
 
   const handleSend = async () => {
     if (!prompt.trim()) return
+    haptic('light')
+    track('generate_click', { page: 'text', model: model.id })
     setPending(true)
     setResult(null)
     setComingSoon(false)
@@ -27,11 +31,14 @@ export default function TextPage() {
     try {
       const res = await api.post(model.endpoint, { user_id: 'demo', prompt })
       setResult(res.data.text ?? JSON.stringify(res.data))
+      haptic('success')
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 501) {
         setComingSoon(true)
+        haptic('warning')
       } else {
         setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
+        haptic('error')
       }
     } finally {
       setPending(false)

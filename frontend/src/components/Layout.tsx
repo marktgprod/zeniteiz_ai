@@ -1,6 +1,9 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, MessageSquare, Image, Video, Sparkles, Newspaper, Users, User } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Главная', end: true, icon: Home },
@@ -22,6 +25,11 @@ const TIER_STYLES: Record<string, string> = {
 
 export default function Layout() {
   const subscriptionTier = useUserStore((s) => s.subscriptionTier)
+  const location = useLocation()
+
+  useEffect(() => {
+    track('page_view', { path: location.pathname })
+  }, [location.pathname])
 
   return (
     <div className="flex min-h-svh flex-col bg-white text-gray-900 dark:bg-black dark:text-gray-100">
@@ -47,6 +55,7 @@ export default function Layout() {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={() => haptic('light')}
               className={({ isActive }) =>
                 `flex min-w-[64px] flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
                   isActive

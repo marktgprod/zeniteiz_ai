@@ -3,6 +3,8 @@ import axios from 'axios'
 import { Clapperboard } from 'lucide-react'
 import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton } from '../components/ui'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 export default function VideoPage() {
   const [prompt, setPrompt] = useState('')
@@ -13,17 +15,22 @@ export default function VideoPage() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
+    haptic('light')
+    track('generate_click', { page: 'video', model: 'runway', duration_seconds: duration })
     setPending(true)
     setComingSoon(false)
     setError(null)
 
     try {
       await api.post('/api/video/runway', { user_id: 'demo', prompt, duration_seconds: duration })
+      haptic('success')
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 501) {
         setComingSoon(true)
+        haptic('warning')
       } else {
         setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
+        haptic('error')
       }
     } finally {
       setPending(false)

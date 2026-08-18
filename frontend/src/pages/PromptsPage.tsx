@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, Copy, Search, SearchX } from 'lucide-react'
 import { api } from '../lib/api'
 import { CATEGORY_LABELS, type Prompt } from '../lib/types'
-import { Card, inputClasses, Notice, PageHeader } from '../components/ui'
+import { Card, CardSkeleton, inputClasses, Notice, PageHeader } from '../components/ui'
+import { track } from '../lib/analytics'
+import { haptic } from '../lib/haptics'
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
@@ -32,6 +34,8 @@ export default function PromptsPage() {
   const handleCopy = async (prompt: Prompt) => {
     await navigator.clipboard.writeText(prompt.prompt_text)
     setCopiedId(prompt.id)
+    haptic('success')
+    track('prompt_copy', { prompt_id: prompt.id, category: prompt.category })
     setTimeout(() => setCopiedId(null), 1500)
   }
 
@@ -76,7 +80,6 @@ export default function PromptsPage() {
         ))}
       </div>
 
-      {loading && <p className="mt-6 text-sm text-gray-500">Загрузка...</p>}
       {error && (
         <div className="mt-6">
           <Notice tone="red">Не удалось загрузить промпты. Убедитесь, что backend запущен на VITE_API_URL.</Notice>
@@ -84,7 +87,9 @@ export default function PromptsPage() {
       )}
 
       <div className="mt-4 space-y-3">
-        {filtered.map((prompt) => (
+        {loading &&
+          Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
+        {!loading && filtered.map((prompt) => (
           <Card key={prompt.id} className="text-left">
             <div className="flex items-start justify-between gap-2">
               <h2 className="font-semibold">{prompt.title}</h2>
