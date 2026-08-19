@@ -1,7 +1,5 @@
 import { ChevronDown, MessagesSquare } from 'lucide-react'
 import { PageHeader } from '../components/ui'
-import { track } from '../lib/analytics'
-import { haptic } from '../lib/haptics'
 
 const FAQ = [
   {
@@ -23,24 +21,17 @@ export default function CommunityPage() {
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title="Сообщество" />
 
-      <a
-        href="https://t.me/+iYNlijxOYrRlNzg0"
-        target="_blank"
-        rel="noreferrer"
-        onClick={() => {
-          haptic('light')
-          track('community_link_click')
-        }}
-        className="flex items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm transition-opacity hover:opacity-85 dark:bg-white dark:text-black"
-      >
+      <div className="flex items-center gap-3 rounded-2xl bg-black p-4 text-left text-white shadow-sm dark:bg-white dark:text-black">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 dark:bg-black/10">
           <MessagesSquare size={18} />
         </div>
         <div>
           <p className="font-semibold">Закрытая группа для подписчиков</p>
-          <p className="mt-0.5 text-sm text-white/75 dark:text-black/65">Обсуждения, поддержка и анонсы новых функций →</p>
+          <p className="mt-0.5 text-sm text-white/75 dark:text-black/65">
+            Доступ выдаётся автоматически при оформлении подписки — искать ссылку не нужно.
+          </p>
         </div>
-      </a>
+      </div>
 
       <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">FAQ</h2>
       <div className="space-y-2">
