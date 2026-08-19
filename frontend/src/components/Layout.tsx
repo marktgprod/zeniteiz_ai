@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, MessageSquare, Image, Video, Sparkles, Newspaper, Users, User } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
+import { useVideoStore } from '../store/videoStore'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 
@@ -25,6 +26,7 @@ const TIER_STYLES: Record<string, string> = {
 
 export default function Layout() {
   const subscriptionTier = useUserStore((s) => s.subscriptionTier)
+  const videoPending = useVideoStore((s) => s.status === 'pending')
   const location = useLocation()
 
   useEffect(() => {
@@ -62,7 +64,12 @@ export default function Layout() {
                   }`
                 }
               >
-                <Icon size={18} strokeWidth={2} />
+                <span className="relative">
+                  <Icon size={18} strokeWidth={2} />
+                  {item.to === '/video' && videoPending && (
+                    <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+                  )}
+                </span>
                 {item.label}
               </NavLink>
             )
@@ -107,11 +114,14 @@ export default function Layout() {
                 {({ isActive }) => (
                   <>
                     <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-lg ${
+                      className={`relative flex h-6 w-6 items-center justify-center rounded-lg ${
                         isActive ? 'bg-gray-100 dark:bg-white/10' : ''
                       }`}
                     >
                       <Icon size={18} strokeWidth={2} />
+                      {item.to === '/video' && videoPending && (
+                        <span className="absolute right-0 top-0 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+                      )}
                     </div>
                     {item.label}
                   </>

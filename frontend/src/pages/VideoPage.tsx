@@ -1,82 +1,29 @@
-import { useEffect, useRef, useState } from 'react'
-import axios from 'axios'
+import { useState } from 'react'
 import { Clapperboard, Download } from 'lucide-react'
-import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { useUserStore } from '../store/userStore'
-
-const POLL_INTERVAL_MS = 4000
+import { useVideoStore } from '../store/videoStore'
 
 export default function VideoPage() {
   const userId = useUserStore((s) => s.id)
+  const { status, videoUrl, error, start } = useVideoStore()
   const [prompt, setPrompt] = useState('')
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [videoUrl, setVideoUrl] = useState<string | null>(null)
-  const pollRef = useRef<number | null>(null)
 
-  useEffect(
-    () => () => {
-      if (pollRef.current) window.clearTimeout(pollRef.current)
-    },
-    [],
-  )
+  const pending = status === 'pending'
 
-  const pollStatus = (requestId: string) => {
-    pollRef.current = window.setTimeout(async () => {
-      try {
-        const res = await api.get(`/api/video/status/${requestId}`)
-        if (res.data.status === 'completed') {
-          setVideoUrl(res.data.video_url)
-          setPending(false)
-          haptic('success')
-        } else {
-          pollStatus(requestId)
-        }
-      } catch (err) {
-        setPending(false)
-        setError(
-          axios.isAxiosError(err) && err.response?.data?.detail
-            ? err.response.data.detail
-            : 'Не удалось получить статус генерации.',
-        )
-        haptic('error')
-      }
-    }, POLL_INTERVAL_MS)
-  }
-
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     if (!prompt.trim()) return
     haptic('light')
     track('video_generate_click', { model: 'minimax' })
 
     if (!userId) {
-      setError('Откройте приложение через Telegram-бота, чтобы отправлять запросы.')
+      useVideoStore.setState({ status: 'error', error: 'Откройте приложение через Telegram-бота, чтобы отправлять запросы.' })
       return
     }
 
-    setPending(true)
-    setError(null)
-    setVideoUrl(null)
-
-    try {
-      const res = await api.post('/api/video/runway', { user_id: userId, prompt })
-      pollStatus(res.data.request_id)
-    } catch (err) {
-      setPending(false)
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        setError('Видео доступно только на тарифе VIP — оформите подписку в профиле.')
-      } else if (axios.isAxiosError(err) && err.response?.status === 429) {
-        setError('Дневной лимит запросов исчерпан. Лимит обновится завтра.')
-      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
-        setError(err.response.data.detail)
-      } else {
-        setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
-      }
-      haptic('error')
-    }
+    start(userId, prompt)
   }
 
   return (
@@ -106,6 +53,12 @@ export default function VideoPage() {
         <Clapperboard size={15} />
         {pending ? 'Генерация... (обычно 1-2 минуты)' : 'Сгенерировать видео'}
       </PrimaryButton>
+
+      {pending && (
+        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
+          Можно перейти на другую вкладку — генерация продолжится в фоне.
+        </p>
+      )}
 
       <div className="mt-4 space-y-3">{error && <Notice tone="red">{error}</Notice>}</div>
 
