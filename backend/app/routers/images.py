@@ -10,6 +10,7 @@ from app.schemas.api_request import ApiRequestOut
 from app.schemas.generation import ImageGenerateRequest
 from app.services.history import get_request_history
 from app.services.limits import REQUEST_LIMITS
+from app.services.openrouter import translate_to_english
 from app.services.together import FLUX_MODEL, TogetherError, estimate_cost, generate_image
 
 router = APIRouter(tags=["images"])
@@ -36,9 +37,10 @@ async def generate_flux(payload: ImageGenerateRequest, db: AsyncSession = Depend
         raise HTTPException(status_code=429, detail=f"Дневной лимит запросов ({limit}) исчерпан")
 
     width, height = _parse_size(payload.size)
+    prompt = await translate_to_english(payload.prompt)
 
     try:
-        data = await generate_image(payload.prompt, width, height, payload.count)
+        data = await generate_image(prompt, width, height, payload.count)
     except TogetherError as exc:
         db.add(
             ApiRequest(
