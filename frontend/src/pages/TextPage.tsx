@@ -1,70 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
-import axios from 'axios'
 import { Send, Trash2 } from 'lucide-react'
-import { api } from '../lib/api'
 import { Notice, PageHeader, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { useUserStore } from '../store/userStore'
-
-const MODELS = [
-  { id: 'claude', label: 'Claude Sonnet 5', endpoint: '/api/text/claude' },
-  { id: 'gpt4o', label: 'GPT-4o mini', endpoint: '/api/text/gpt4o' },
-] as const
-
-type ChatMessage = { role: 'user' | 'assistant'; content: string }
+import { TEXT_MODELS, useChatStore } from '../store/chatStore'
 
 export default function TextPage() {
   const userId = useUserStore((s) => s.id)
-  const [model, setModel] = useState<(typeof MODELS)[number]>(MODELS[0])
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const { model, messages, pending, error, setModel, send, clear } = useChatStore()
   const [prompt, setPrompt] = useState('')
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, pending])
 
-  const handleSend = async () => {
+  const handleSend = () => {
     const text = prompt.trim()
     if (!text) return
     haptic('light')
-    track('text_generate_click', { model: model.id })
+    track('text_generate_click', { model })
 
     if (!userId) {
-      setError('Откройте приложение через Telegram-бота, чтобы отправлять запросы.')
+      useChatStore.setState({ error: 'Откройте приложение через Telegram-бота, чтобы отправлять запросы.' })
       return
     }
 
-    const history = messages
-    setMessages([...history, { role: 'user', content: text }])
     setPrompt('')
-    setPending(true)
-    setError(null)
-
-    try {
-      const res = await api.post(model.endpoint, { user_id: userId, prompt: text, history })
-      const reply = res.data.text ?? JSON.stringify(res.data)
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
-      haptic('success')
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        setError('Текст доступен с тарифа Starter — оформите подписку в профиле.')
-      } else if (axios.isAxiosError(err) && err.response?.status === 429) {
-        setError('Дневной лимит запросов исчерпан. Лимит обновится завтра или повысьте тариф.')
-      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
-        setError(err.response.data.detail)
-      } else {
-        setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
-      }
-      setMessages((prev) => prev.slice(0, -1))
-      setPrompt(text)
-      haptic('error')
-    } finally {
-      setPending(false)
-    }
+    send(userId, text)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -82,8 +46,7 @@ export default function TextPage() {
           <button
             onClick={() => {
               haptic('light')
-              setMessages([])
-              setError(null)
+              clear()
             }}
             className="mb-4 flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
           >
@@ -94,9 +57,9 @@ export default function TextPage() {
       </div>
 
       <SegmentedTabs
-        options={MODELS.map((m) => ({ id: m.id, label: m.label }))}
-        value={model.id}
-        onChange={(id) => setModel(MODELS.find((m) => m.id === id)!)}
+        options={TEXT_MODELS.map((m) => ({ id: m.id, label: m.label }))}
+        value={model}
+        onChange={(id) => setModel(id)}
       />
 
       <div
@@ -134,6 +97,12 @@ export default function TextPage() {
           </div>
         )}
       </div>
+
+      {pending && (
+        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
+          Можно перейти на другую вкладку — ответ придёт в фоне.
+        </p>
+      )}
 
       {error && (
         <div className="mt-3">

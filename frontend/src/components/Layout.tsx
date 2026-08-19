@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Home, MessageSquare, Image, Video, Sparkles, Newspaper, Users, User } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
 import { useVideoStore } from '../store/videoStore'
+import { useChatStore } from '../store/chatStore'
+import { useImagesStore } from '../store/imagesStore'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 
@@ -26,7 +28,14 @@ const TIER_STYLES: Record<string, string> = {
 
 export default function Layout() {
   const subscriptionTier = useUserStore((s) => s.subscriptionTier)
+  const textPending = useChatStore((s) => s.pending)
+  const imagesPending = useImagesStore((s) => s.pending)
   const videoPending = useVideoStore((s) => s.status === 'pending')
+  const pendingByPath: Record<string, boolean> = {
+    '/text': textPending,
+    '/images': imagesPending,
+    '/video': videoPending,
+  }
   const location = useLocation()
 
   useEffect(() => {
@@ -66,7 +75,7 @@ export default function Layout() {
               >
                 <span className="relative">
                   <Icon size={18} strokeWidth={2} />
-                  {item.to === '/video' && videoPending && (
+                  {pendingByPath[item.to] && (
                     <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                   )}
                 </span>
@@ -119,7 +128,7 @@ export default function Layout() {
                       }`}
                     >
                       <Icon size={18} strokeWidth={2} />
-                      {item.to === '/video' && videoPending && (
+                      {pendingByPath[item.to] && (
                         <span className="absolute right-0 top-0 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                       )}
                     </div>

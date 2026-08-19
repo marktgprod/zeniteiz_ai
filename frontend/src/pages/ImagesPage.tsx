@@ -1,63 +1,28 @@
 import { useState } from 'react'
-import axios from 'axios'
 import { Download, ImageIcon, Wand2 } from 'lucide-react'
-import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { downloadFile } from '../lib/download'
 import { useUserStore } from '../store/userStore'
-
-const MODELS = [
-  { id: 'flux', label: 'Flux.1 Pro', endpoint: '/api/image/flux' },
-  { id: 'dalle3', label: 'DALL-E 3', endpoint: '/api/image/dalle3' },
-] as const
+import { IMAGE_MODELS, useImagesStore } from '../store/imagesStore'
 
 export default function ImagesPage() {
   const userId = useUserStore((s) => s.id)
-  const [model, setModel] = useState<(typeof MODELS)[number]>(MODELS[0])
+  const { model, images, pending, error, comingSoon, setModel, generate } = useImagesStore()
   const [prompt, setPrompt] = useState('')
-  const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [comingSoon, setComingSoon] = useState<string | null>(null)
-  const [images, setImages] = useState<string[]>([])
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     if (!prompt.trim()) return
     haptic('light')
-    track('image_generate_click', { model: model.id })
+    track('image_generate_click', { model })
 
     if (!userId) {
-      setError('Откройте приложение через Telegram-бота, чтобы отправлять запросы.')
+      useImagesStore.setState({ error: 'Откройте приложение через Telegram-бота, чтобы отправлять запросы.' })
       return
     }
 
-    setPending(true)
-    setError(null)
-    setComingSoon(null)
-
-    try {
-      const res = await api.post(model.endpoint, { user_id: userId, prompt, size: '1024x1024', count: 1 })
-      setImages((prev) => [...(res.data.images ?? []), ...prev])
-      haptic('success')
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        setError('Изображения доступны с тарифа Pro — оформите подписку в профиле.')
-      } else if (axios.isAxiosError(err) && err.response?.status === 429) {
-        setError('Дневной лимит запросов исчерпан. Лимит обновится завтра или повысьте тариф.')
-      } else if (axios.isAxiosError(err) && err.response?.status === 501) {
-        setComingSoon(err.response.data?.detail ?? 'Эта модель ещё не подключена.')
-        haptic('warning')
-      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
-        setError(err.response.data.detail)
-        haptic('error')
-      } else {
-        setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
-        haptic('error')
-      }
-    } finally {
-      setPending(false)
-    }
+    generate(userId, prompt)
   }
 
   return (
@@ -65,9 +30,9 @@ export default function ImagesPage() {
       <PageHeader title="Изображения" />
 
       <SegmentedTabs
-        options={MODELS.map((m) => ({ id: m.id, label: m.label }))}
-        value={model.id}
-        onChange={(id) => setModel(MODELS.find((m) => m.id === id)!)}
+        options={IMAGE_MODELS.map((m) => ({ id: m.id, label: m.label }))}
+        value={model}
+        onChange={(id) => setModel(id)}
       />
 
       <textarea
@@ -86,6 +51,12 @@ export default function ImagesPage() {
         <Wand2 size={15} />
         {pending ? 'Генерация...' : 'Сгенерировать'}
       </PrimaryButton>
+
+      {pending && (
+        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
+          Можно перейти на другую вкладку — изображение появится здесь по готовности.
+        </p>
+      )}
 
       <div className="mt-4 space-y-3">
         {comingSoon && <Notice tone="amber">{comingSoon}</Notice>}
