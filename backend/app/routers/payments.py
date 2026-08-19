@@ -2,6 +2,7 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,7 +36,14 @@ async def tribute_webhook(
     if not verify_webhook_signature(raw_body, trbt_signature):
         raise HTTPException(status_code=401, detail="invalid signature")
 
-    event = TributeWebhookPayload.model_validate_json(raw_body)
+    try:
+        event = TributeWebhookPayload.model_validate_json(raw_body)
+    except ValidationError:
+        # Tribute's own "send test request" button fires a payload that doesn't
+        # match any real event shape, and future event types we don't handle
+        # yet would look the same to us — acknowledge rather than 422/retry-loop.
+        logger.info("Ignoring Tribute webhook with unrecognized shape: %s", raw_body[:500])
+        return {"ok": True}
 
     if event.name not in GRANT_EVENTS:
         logger.info("Ignoring Tribute event %s", event.name)
