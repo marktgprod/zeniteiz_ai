@@ -48,8 +48,8 @@ const TIERS: {
   },
   {
     id: 'VIP',
-    name: 'VIP / Lifetime',
-    price: '3999 ₽ разово',
+    name: 'VIP',
+    price: '3999 ₽/год',
     features: ['Всё из Pro', 'MiniMax Video-01 (видео)', 'Безлимитные запросы', 'Личный чат с разработчиком'],
   },
 ]
