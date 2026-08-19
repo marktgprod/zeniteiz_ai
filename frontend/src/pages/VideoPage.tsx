@@ -5,8 +5,10 @@ import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { useUserStore } from '../store/userStore'
 
 export default function VideoPage() {
+  const userId = useUserStore((s) => s.id)
   const [prompt, setPrompt] = useState('')
   const [duration, setDuration] = useState(5)
   const [pending, setPending] = useState(false)
@@ -17,12 +19,18 @@ export default function VideoPage() {
     if (!prompt.trim()) return
     haptic('light')
     track('video_generate_click', { model: 'runway', duration_seconds: duration })
+
+    if (!userId) {
+      setError('Откройте приложение через Telegram-бота, чтобы отправлять запросы.')
+      return
+    }
+
     setPending(true)
     setComingSoon(false)
     setError(null)
 
     try {
-      await api.post('/api/video/runway', { user_id: 'demo', prompt, duration_seconds: duration })
+      await api.post('/api/video/runway', { user_id: userId, prompt, duration_seconds: duration })
       haptic('success')
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 501) {
