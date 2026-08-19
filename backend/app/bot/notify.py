@@ -5,7 +5,7 @@ from aiogram import Bot
 from sqlalchemy import select
 
 from app.db import async_session
-from app.models.user import User
+from app.models.user import SubscriptionTier, User
 from app.services.limits import REQUEST_LIMITS
 
 logger = logging.getLogger(__name__)
@@ -13,6 +13,39 @@ logger = logging.getLogger(__name__)
 # Don't re-send the same reminder to a user more than once within this window,
 # even if the check runs more than once a day (cron delivery isn't exactly-once).
 REMINDER_COOLDOWN = timedelta(hours=20)
+
+
+async def _downgrade_expired_and_upsell(bot: Bot) -> None:
+    """Nothing else in the app ever clears an expired subscription_expires_at,
+    so without this a trial (or, once Tribute is live, a lapsed paid plan)
+    never actually ends — the user keeps paid-tier access forever. Downgrading
+    to FREE and clearing expires_at also stops _notify_expiring_subscriptions
+    from re-sending the same "expires soon" reminder indefinitely."""
+    now = datetime.now(timezone.utc)
+    async with async_session() as db:
+        result = await db.execute(
+            select(User).where(
+                User.subscription_expires_at.is_not(None),
+                User.subscription_expires_at <= now,
+                User.subscription_tier != SubscriptionTier.FREE,
+            )
+        )
+        for user in result.scalars().all():
+            old_tier = user.subscription_tier.value
+            user.subscription_tier = SubscriptionTier.FREE
+            user.subscription_expires_at = None
+            await db.commit()
+
+            try:
+                await bot.send_message(
+                    user.telegram_user_id,
+                    f"⌛ Тариф {old_tier} закончился.\n\n"
+                    "Оформите подписку Starter, Pro или VIP в приложении, чтобы продолжить пользоваться "
+                    "текстом, изображениями и видео от лучших ИИ-моделей.\n\n"
+                    "Откройте /app → Профиль, чтобы выбрать тариф.",
+                )
+            except Exception:
+                logger.exception("Failed to notify user %s about subscription downgrade", user.telegram_user_id)
 
 
 async def _notify_expiring_subscriptions(bot: Bot) -> None:
@@ -62,5 +95,6 @@ async def _notify_near_limit(bot: Bot) -> None:
 async def run_notification_check(bot: Bot) -> None:
     """Run all reminder checks once. Call this from a scheduler (Vercel Cron), not a loop —
     the backend runs as a serverless function and has no long-lived process to loop in."""
+    await _downgrade_expired_and_upsell(bot)
     await _notify_expiring_subscriptions(bot)
     await _notify_near_limit(bot)
