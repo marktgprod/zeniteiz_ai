@@ -36,12 +36,17 @@ class Level:
 # Video is capped separately via reward_video_credits (not blanket-unlocked by
 # the tier boost) because at ~$0.50/generation it's the one model expensive
 # enough that "unlimited for a week" could lose money on a single heavy user.
+# The cap is intentionally left out of reward_text for VIP-boost levels (3-4) —
+# stated as "no need to mention it, VIP already implies video access" — but it
+# still applies silently under the hood. Pro-boost levels (1-2) never grant
+# video credits at all: video requires effective tier == VIP, so a credit
+# attached to a Pro reward would just be dead and unusable.
 LEVELS: list[Level] = [
     Level(0, "Новичок", 0, None, 0, 0, ""),
-    Level(1, "Активный", 15, SubscriptionTier.PRO, 2, 0, "2 дня тарифа Pro"),
-    Level(2, "Профи", 50, SubscriptionTier.PRO, 5, 1, "5 дней тарифа Pro + 1 бесплатное видео"),
-    Level(3, "Мастер", 150, SubscriptionTier.VIP, 7, 3, "7 дней тарифа VIP + 3 бесплатных видео"),
-    Level(4, "Легенда", 500, SubscriptionTier.VIP, 14, 10, "14 дней тарифа VIP + 10 бесплатных видео"),
+    Level(1, "Активный", 50, SubscriptionTier.PRO, 2, 0, "2 дня тарифа Pro"),
+    Level(2, "Профи", 150, SubscriptionTier.PRO, 5, 0, "5 дней тарифа Pro"),
+    Level(3, "Мастер", 400, SubscriptionTier.VIP, 7, 3, "7 дней тарифа VIP"),
+    Level(4, "Легенда", 1000, SubscriptionTier.VIP, 14, 10, "14 дней тарифа VIP"),
 ]
 
 
