@@ -48,6 +48,35 @@ async def _downgrade_expired_and_upsell(bot: Bot) -> None:
                 logger.exception("Failed to notify user %s about subscription downgrade", user.telegram_user_id)
 
 
+async def _notify_reward_expired(bot: Bot) -> None:
+    """Loyalty-level rewards grant a temporary tier boost (reward_tier/
+    reward_expires_at) separate from the user's real subscription. Nothing
+    else clears these once they lapse, and — unlike the real-subscription
+    downgrade — nothing tells the user their bonus access just ended."""
+    now = datetime.now(timezone.utc)
+    async with async_session() as db:
+        result = await db.execute(
+            select(User).where(User.reward_tier.is_not(None), User.reward_expires_at.is_not(None), User.reward_expires_at <= now)
+        )
+        for user in result.scalars().all():
+            old_reward_tier = user.reward_tier.value
+            user.reward_tier = None
+            user.reward_expires_at = None
+            await db.commit()
+
+            try:
+                await bot.send_message(
+                    user.telegram_user_id,
+                    f"⌛ Бонусный доступ уровня {old_reward_tier} за активность закончился — "
+                    "это была награда за уровень в разделе «Профиль».\n\n"
+                    f"Действует ваш обычный тариф ({user.subscription_tier.value}). "
+                    "Продолжайте пользоваться приложением, чтобы заработать следующую награду, "
+                    "или оформите подписку в /app → Профиль.",
+                )
+            except Exception:
+                logger.exception("Failed to notify user %s about reward expiry", user.telegram_user_id)
+
+
 async def _notify_expiring_subscriptions(bot: Bot) -> None:
     now = datetime.now(timezone.utc)
     soon = now + timedelta(days=3)
@@ -96,5 +125,6 @@ async def run_notification_check(bot: Bot) -> None:
     """Run all reminder checks once. Call this from a scheduler (Vercel Cron), not a loop —
     the backend runs as a serverless function and has no long-lived process to loop in."""
     await _downgrade_expired_and_upsell(bot)
+    await _notify_reward_expired(bot)
     await _notify_expiring_subscriptions(bot)
     await _notify_near_limit(bot)
