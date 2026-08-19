@@ -19,7 +19,11 @@ class OpenRouterError(Exception):
 
 
 async def chat_completion(
-    model: str, messages: list[dict[str, str]], temperature: float = 0.7, max_tokens: int = 1024
+    model: str,
+    messages: list[dict[str, str]],
+    temperature: float = 0.7,
+    max_tokens: int = 1024,
+    response_format: dict | None = None,
 ) -> dict:
     if not settings.openrouter_api_key:
         raise OpenRouterError("OPENROUTER_API_KEY is not configured")
@@ -35,6 +39,8 @@ async def chat_completion(
         "max_tokens": max_tokens,
         "usage": {"include": True},
     }
+    if response_format is not None:
+        payload["response_format"] = response_format
 
     async with aiohttp.ClientSession() as session:
         async with session.post(

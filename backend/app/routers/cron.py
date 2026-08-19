@@ -1,9 +1,13 @@
 from aiogram.exceptions import TelegramAPIError
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.dispatcher import create_bot
 from app.bot.notify import run_notification_check
 from app.config import settings
+from app.db import get_db
+from app.services.news_fetch import fetch_and_store_news
+from app.services.prompt_gen import generate_and_store_prompts
 
 router = APIRouter(tags=["cron"])
 
@@ -24,6 +28,20 @@ async def cron_notifications(authorization: str = Header(default="")) -> dict:
         await bot.session.close()
 
     return {"ok": True}
+
+
+@router.get("/api/cron/news")
+async def cron_news(authorization: str = Header(default=""), db: AsyncSession = Depends(get_db)) -> dict:
+    _check_auth(authorization)
+    added = await fetch_and_store_news(db)
+    return {"ok": True, "added": added}
+
+
+@router.get("/api/cron/prompts")
+async def cron_prompts(authorization: str = Header(default=""), db: AsyncSession = Depends(get_db)) -> dict:
+    _check_auth(authorization)
+    added = await generate_and_store_prompts(db)
+    return {"ok": True, "added": added}
 
 
 @router.get("/api/cron/set-webhook")
