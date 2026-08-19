@@ -24,7 +24,7 @@ export default function CommunityPage() {
       <PageHeader title="Сообщество" />
 
       <a
-        href="https://t.me/+your_channel_here"
+        href="https://t.me/+iYNlijxOYrRlNzg0"
         target="_blank"
         rel="noreferrer"
         onClick={() => {
