@@ -28,8 +28,11 @@ async def _generate(model_key: str, payload: TextGenerateRequest, db: AsyncSessi
 
     model = MODEL_SLUGS[model_key]
 
+    messages = [{"role": m.role, "content": m.content} for m in payload.history[-20:]]
+    messages.append({"role": "user", "content": payload.prompt})
+
     try:
-        data = await chat_completion(model, payload.prompt, payload.temperature, payload.max_tokens)
+        data = await chat_completion(model, messages, payload.temperature, payload.max_tokens)
     except OpenRouterError as exc:
         db.add(
             ApiRequest(

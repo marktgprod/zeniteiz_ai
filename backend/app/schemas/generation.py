@@ -3,9 +3,15 @@ import uuid
 from pydantic import BaseModel
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
 class TextGenerateRequest(BaseModel):
     user_id: uuid.UUID
     prompt: str
+    history: list[ChatMessage] = []
     temperature: float = 0.7
     max_tokens: int = 1024
 
