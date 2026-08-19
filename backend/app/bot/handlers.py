@@ -40,15 +40,23 @@ async def cmd_start(message: Message) -> None:
         "✨ <b>Промпты</b> — библиотека готовых запросов"
     )
 
+    support = "💬 Поддержка: @rassvetmr"
+
     if is_new:
         text = (
             f"Привет, {name}! 👋\n\n"
             f"Добро пожаловать в Zenit Ai — всё это доступно в одном приложении:\n\n"
             f"{features}\n\n"
-            "Вам открыт бесплатный доступ уровня Starter на 3 дня. Нажмите кнопку ниже, чтобы начать."
+            "Вам открыт бесплатный доступ уровня Starter на 3 дня. Нажмите кнопку ниже, чтобы начать.\n\n"
+            f"{support}"
         )
     else:
-        text = f"С возвращением, {name}! 👋\n\nНапомню, что доступно:\n\n{features}\n\nОткройте приложение, чтобы продолжить."
+        text = (
+            f"С возвращением, {name}! 👋\n\n"
+            f"Напомню, что доступно:\n\n{features}\n\n"
+            f"Откройте приложение, чтобы продолжить.\n\n"
+            f"{support}"
+        )
 
     await message.answer(text, reply_markup=_webapp_keyboard())
 
