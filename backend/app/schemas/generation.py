@@ -26,4 +26,3 @@ class ImageGenerateRequest(BaseModel):
 class VideoGenerateRequest(BaseModel):
     user_id: uuid.UUID
     prompt: str
-    duration_seconds: int = 5

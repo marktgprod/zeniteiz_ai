@@ -1,24 +1,56 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { Clapperboard } from 'lucide-react'
+import { Clapperboard, Download } from 'lucide-react'
 import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { useUserStore } from '../store/userStore'
 
+const POLL_INTERVAL_MS = 4000
+
 export default function VideoPage() {
   const userId = useUserStore((s) => s.id)
   const [prompt, setPrompt] = useState('')
-  const [duration, setDuration] = useState(5)
   const [pending, setPending] = useState(false)
-  const [comingSoon, setComingSoon] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
+  const pollRef = useRef<number | null>(null)
+
+  useEffect(
+    () => () => {
+      if (pollRef.current) window.clearTimeout(pollRef.current)
+    },
+    [],
+  )
+
+  const pollStatus = (requestId: string) => {
+    pollRef.current = window.setTimeout(async () => {
+      try {
+        const res = await api.get(`/api/video/status/${requestId}`)
+        if (res.data.status === 'completed') {
+          setVideoUrl(res.data.video_url)
+          setPending(false)
+          haptic('success')
+        } else {
+          pollStatus(requestId)
+        }
+      } catch (err) {
+        setPending(false)
+        setError(
+          axios.isAxiosError(err) && err.response?.data?.detail
+            ? err.response.data.detail
+            : 'Не удалось получить статус генерации.',
+        )
+        haptic('error')
+      }
+    }, POLL_INTERVAL_MS)
+  }
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
     haptic('light')
-    track('video_generate_click', { model: 'runway', duration_seconds: duration })
+    track('video_generate_click', { model: 'minimax' })
 
     if (!userId) {
       setError('Откройте приложение через Telegram-бота, чтобы отправлять запросы.')
@@ -26,22 +58,24 @@ export default function VideoPage() {
     }
 
     setPending(true)
-    setComingSoon(false)
     setError(null)
+    setVideoUrl(null)
 
     try {
-      await api.post('/api/video/runway', { user_id: userId, prompt, duration_seconds: duration })
-      haptic('success')
+      const res = await api.post('/api/video/runway', { user_id: userId, prompt })
+      pollStatus(res.data.request_id)
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 501) {
-        setComingSoon(true)
-        haptic('warning')
+      setPending(false)
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        setError('Видео доступно только на тарифе VIP — оформите подписку в профиле.')
+      } else if (axios.isAxiosError(err) && err.response?.status === 429) {
+        setError('Дневной лимит запросов исчерпан. Лимит обновится завтра.')
+      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail)
       } else {
         setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
-        haptic('error')
       }
-    } finally {
-      setPending(false)
+      haptic('error')
     }
   }
 
@@ -64,36 +98,31 @@ export default function VideoPage() {
         className={inputClasses}
       />
 
-      <label className="mt-4 block text-sm text-gray-500 dark:text-gray-400">
-        Длительность: <span className="font-medium text-gray-900 dark:text-gray-100">{duration}с</span>
-        <input
-          type="range"
-          min={5}
-          max={30}
-          step={5}
-          value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
-          className="mt-2 w-full accent-black dark:accent-white"
-        />
-      </label>
-
       <PrimaryButton
         onClick={handleGenerate}
         disabled={pending || !prompt.trim()}
         className="mt-4 flex w-full items-center justify-center gap-2"
       >
         <Clapperboard size={15} />
-        {pending ? 'Генерация...' : 'Сгенерировать видео'}
+        {pending ? 'Генерация... (обычно 1-2 минуты)' : 'Сгенерировать видео'}
       </PrimaryButton>
 
-      <div className="mt-4 space-y-3">
-        {comingSoon && (
-          <Notice tone="amber">
-            Интеграция с Runway Gen-3 ещё не подключена — появится после настройки FAL.AI ключа.
-          </Notice>
-        )}
-        {error && <Notice tone="red">{error}</Notice>}
-      </div>
+      <div className="mt-4 space-y-3">{error && <Notice tone="red">{error}</Notice>}</div>
+
+      {videoUrl && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10">
+          <video src={videoUrl} controls autoPlay loop className="w-full" />
+          <a
+            href={videoUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 border-t border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 dark:border-white/10 dark:text-gray-300 dark:hover:text-white"
+          >
+            <Download size={14} />
+            Скачать видео
+          </a>
+        </div>
+      )}
     </div>
   )
 }
