@@ -18,6 +18,10 @@
     {
       "path": "/api/cron/prompts",
       "schedule": "30 7 * * *"
+    },
+    {
+      "path": "/api/cron/reset-limits",
+      "schedule": "0 21 * * *"
     }
   ]
 }

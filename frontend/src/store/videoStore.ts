@@ -4,6 +4,7 @@ import { api } from '../lib/api'
 import { haptic } from '../lib/haptics'
 
 const POLL_INTERVAL_MS = 4000
+const MAX_POLL_ATTEMPTS = 90 // ~6 minutes — generations normally finish in under a minute
 
 type VideoStatus = 'idle' | 'pending' | 'completed' | 'error'
 
@@ -24,15 +25,24 @@ function stopPolling() {
   }
 }
 
-function pollStatus(requestId: string, set: (partial: Partial<VideoState>) => void) {
+function pollStatus(requestId: string, set: (partial: Partial<VideoState>) => void, attempt = 0) {
   pollTimer = setTimeout(async () => {
+    if (attempt >= MAX_POLL_ATTEMPTS) {
+      set({
+        status: 'error',
+        error: 'Генерация видео занимает необычно много времени. Попробуйте ещё раз позже или напишите в поддержку.',
+      })
+      haptic('error')
+      return
+    }
+
     try {
       const res = await api.get(`/api/video/status/${requestId}`)
       if (res.data.status === 'completed') {
         set({ status: 'completed', videoUrl: res.data.video_url })
         haptic('success')
       } else {
-        pollStatus(requestId, set)
+        pollStatus(requestId, set, attempt + 1)
       }
     } catch (err) {
       set({

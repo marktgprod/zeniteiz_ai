@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from aiogram.exceptions import TelegramAPIError
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +8,7 @@ from app.bot.dispatcher import create_bot
 from app.bot.notify import run_notification_check
 from app.config import settings
 from app.db import get_db
+from app.services.limits import reset_daily_requests, reset_monthly_requests
 from app.services.news_fetch import fetch_and_store_news
 from app.services.prompt_gen import generate_and_store_prompts
 
@@ -42,6 +45,18 @@ async def cron_prompts(authorization: str = Header(default=""), db: AsyncSession
     _check_auth(authorization)
     added = await generate_and_store_prompts(db)
     return {"ok": True, "added": added}
+
+
+@router.get("/api/cron/reset-limits")
+async def cron_reset_limits(authorization: str = Header(default=""), db: AsyncSession = Depends(get_db)) -> dict:
+    _check_auth(authorization)
+    daily_reset = await reset_daily_requests(db)
+
+    monthly_reset = 0
+    if datetime.now(timezone.utc).day == 1:
+        monthly_reset = await reset_monthly_requests(db)
+
+    return {"ok": True, "daily_reset": daily_reset, "monthly_reset": monthly_reset}
 
 
 @router.get("/api/cron/set-webhook")
