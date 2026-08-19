@@ -1,4 +1,10 @@
+import { api } from './api'
 import { WebApp } from './telegram'
+
+function proxiedUrl(url: string, fileName: string): string {
+  const base = api.defaults.baseURL ?? ''
+  return `${base}/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(fileName)}`
+}
 
 function extensionFromContentType(contentType: string | null): string | null {
   if (!contentType) return null
@@ -29,14 +35,16 @@ async function fallbackBlobDownload(url: string, fileName: string) {
 }
 
 export function downloadFile(url: string, fileName: string) {
+  const proxied = proxiedUrl(url, fileName)
+
   if (WebApp && typeof WebApp.downloadFile === 'function') {
-    WebApp.downloadFile({ url, file_name: fileName }, (isAccepted) => {
+    WebApp.downloadFile({ url: proxied, file_name: fileName }, (isAccepted) => {
       if (!isAccepted) return
     })
     return
   }
 
-  fallbackBlobDownload(url, fileName).catch(() => {
+  fallbackBlobDownload(proxied, fileName).catch(() => {
     window.open(url, '_blank')
   })
 }

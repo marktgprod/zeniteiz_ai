@@ -8,7 +8,7 @@ from app.bot.dispatcher import create_bot, create_dispatcher
 from app.bot.webhook import router as webhook_router
 from app.config import settings
 from app.db import init_db
-from app.routers import auth, cron, events, images, news, payments, prompts, text, video
+from app.routers import auth, cron, download, events, images, news, payments, prompts, text, video
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,7 @@ app.include_router(auth.router)
 app.include_router(text.router)
 app.include_router(images.router)
 app.include_router(video.router)
+app.include_router(download.router)
 app.include_router(prompts.router)
 app.include_router(news.router)
 app.include_router(payments.router)
