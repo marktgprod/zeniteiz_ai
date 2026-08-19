@@ -14,15 +14,6 @@ interface RequestStats {
   total: number
 }
 
-const EVENT_LABELS: Record<string, string> = {
-  text_generate_click: 'Запросы на текст',
-  image_generate_click: 'Запросы на фото',
-  video_generate_click: 'Запросы на видео',
-  prompt_copy: 'Копирование промптов',
-  upgrade_click: 'Клики на апгрейд тарифа',
-  community_link_click: 'Переходы в сообщество',
-}
-
 export default function AnalyticsPage() {
   const [events, setEvents] = useState<EventSummary[]>([])
   const [stats, setStats] = useState<RequestStats | null>(null)
@@ -35,7 +26,7 @@ export default function AnalyticsPage() {
       api.get<RequestStats>('/api/events/request-stats'),
     ])
       .then(([summaryRes, statsRes]) => {
-        setEvents(summaryRes.data.filter((e) => e.event_name in EVENT_LABELS))
+        setEvents(summaryRes.data)
         setStats(statsRes.data)
       })
       .catch(() => setError(true))
@@ -48,7 +39,7 @@ export default function AnalyticsPage() {
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title="Аналитика" />
       <p className="-mt-3 mb-4 text-sm text-gray-500 dark:text-gray-400">
-        Видно только вам — сводка по использованию приложения.
+        Видно только вам — сводка по успешным генерациям.
       </p>
 
       {error && <Notice tone="red">Не удалось загрузить аналитику. Убедитесь, что backend запущен.</Notice>}
@@ -62,22 +53,19 @@ export default function AnalyticsPage() {
         ) : (
           <>
             <Card className="text-left">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Запросов сегодня</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Генераций сегодня</p>
               <p className="mt-1 text-2xl font-bold">{stats?.today ?? 0}</p>
             </Card>
             <Card className="text-left">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Запросов всего</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Генераций всего</p>
               <p className="mt-1 text-2xl font-bold">{stats?.total ?? 0}</p>
             </Card>
           </>
         )}
       </div>
-      <p className="mt-2 text-xs text-gray-400">
-        Запрос = клик «Сгенерировать» на Текст/Фото/Видео. Пока не подключены ключи ИИ-провайдеров, это спрос, а не
-        готовые результаты.
-      </p>
+      <p className="mt-2 text-xs text-gray-400">Считаются только успешно завершённые генерации — текст, фото, видео.</p>
 
-      <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">По типам событий</h2>
+      <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">По типам генераций</h2>
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {loading && Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
 
@@ -85,7 +73,7 @@ export default function AnalyticsPage() {
           events.map((e) => (
             <Card key={e.event_name} className="text-left">
               <div className="flex items-baseline justify-between gap-2">
-                <h2 className="font-semibold">{EVENT_LABELS[e.event_name] ?? e.event_name}</h2>
+                <h2 className="font-semibold">{e.event_name}</h2>
                 <span className="shrink-0 text-sm text-gray-500 dark:text-gray-400">{e.count}</span>
               </div>
               <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">

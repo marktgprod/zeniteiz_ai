@@ -34,5 +34,15 @@ class User(Base):
     last_expiry_reminder_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_limit_reminder_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Loyalty program: loyalty_level is the last level index the user has been
+    # credited for (so a level-up reward fires exactly once). reward_tier/
+    # reward_expires_at grant a temporary tier boost on top of subscription_tier;
+    # reward_video_credits is spent separately since video is the one generation
+    # type expensive enough that "unlimited during the boost" isn't viable.
+    loyalty_level: Mapped[int] = mapped_column(Integer, default=0)
+    reward_tier: Mapped[SubscriptionTier | None] = mapped_column(Enum(SubscriptionTier), nullable=True)
+    reward_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    reward_video_credits: Mapped[int] = mapped_column(Integer, default=0)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_active: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

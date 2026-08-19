@@ -10,6 +10,7 @@ from app.schemas.api_request import ApiRequestOut
 from app.schemas.generation import VideoGenerateRequest
 from app.services.fal import MINIMAX_MODEL, FalError, get_video_result, get_video_status, submit_video
 from app.services.history import get_request_history
+from app.services.loyalty import check_level_up, get_effective_tier
 from app.services.openrouter import translate_to_english
 
 router = APIRouter(tags=["video"])
@@ -21,8 +22,19 @@ async def generate_video(payload: VideoGenerateRequest, db: AsyncSession = Depen
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
 
+    # Real VIP is unlimited. A loyalty-reward VIP boost only covers text/image —
+    # video is expensive enough (~$0.50/generation) that it's metered separately
+    # via reward_video_credits even while the boosted tier is active.
+    using_reward_credit = False
     if user.subscription_tier != SubscriptionTier.VIP:
-        raise HTTPException(status_code=403, detail="Видео доступно только на тарифе VIP")
+        if get_effective_tier(user) != SubscriptionTier.VIP:
+            raise HTTPException(status_code=403, detail="Видео доступно только на тарифе VIP")
+        if user.reward_video_credits <= 0:
+            raise HTTPException(
+                status_code=403,
+                detail="Бесплатные видео из награды закончились — оформите тариф VIP для безлимита",
+            )
+        using_reward_credit = True
 
     prompt = await translate_to_english(payload.prompt)
 
@@ -39,6 +51,8 @@ async def generate_video(payload: VideoGenerateRequest, db: AsyncSession = Depen
 
     user.requests_today += 1
     user.requests_month += 1
+    if using_reward_credit:
+        user.reward_video_credits -= 1
     db.add(
         ApiRequest(
             user_id=user.id,
@@ -48,6 +62,7 @@ async def generate_video(payload: VideoGenerateRequest, db: AsyncSession = Depen
         )
     )
     await db.commit()
+    await check_level_up(db, user)
 
     return {"request_id": request_id}
 

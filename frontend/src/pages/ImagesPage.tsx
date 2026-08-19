@@ -19,6 +19,7 @@ export default function ImagesPage() {
   const [prompt, setPrompt] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [comingSoon, setComingSoon] = useState<string | null>(null)
   const [images, setImages] = useState<string[]>([])
 
   const handleGenerate = async () => {
@@ -33,6 +34,7 @@ export default function ImagesPage() {
 
     setPending(true)
     setError(null)
+    setComingSoon(null)
 
     try {
       const res = await api.post(model.endpoint, { user_id: userId, prompt, size: '1024x1024', count: 1 })
@@ -43,12 +45,16 @@ export default function ImagesPage() {
         setError('Изображения доступны с тарифа Pro — оформите подписку в профиле.')
       } else if (axios.isAxiosError(err) && err.response?.status === 429) {
         setError('Дневной лимит запросов исчерпан. Лимит обновится завтра или повысьте тариф.')
+      } else if (axios.isAxiosError(err) && err.response?.status === 501) {
+        setComingSoon(err.response.data?.detail ?? 'Эта модель ещё не подключена.')
+        haptic('warning')
       } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
         setError(err.response.data.detail)
+        haptic('error')
       } else {
         setError('Не удалось отправить запрос. Проверьте, что backend запущен.')
+        haptic('error')
       }
-      haptic('error')
     } finally {
       setPending(false)
     }
@@ -81,7 +87,10 @@ export default function ImagesPage() {
         {pending ? 'Генерация...' : 'Сгенерировать'}
       </PrimaryButton>
 
-      <div className="mt-4 space-y-3">{error && <Notice tone="red">{error}</Notice>}</div>
+      <div className="mt-4 space-y-3">
+        {comingSoon && <Notice tone="amber">{comingSoon}</Notice>}
+        {error && <Notice tone="red">{error}</Notice>}
+      </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         {images.map((url, i) => (

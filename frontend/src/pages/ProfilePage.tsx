@@ -1,12 +1,32 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import axios from 'axios'
-import { Check, ChevronRight, BarChart3 } from 'lucide-react'
+import { Check, ChevronRight, BarChart3, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useUserStore, type SubscriptionTier } from '../store/userStore'
-import { Notice, PageHeader, PrimaryButton } from '../components/ui'
+import { Card, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+
+interface LevelInfo {
+  index: number
+  name: string
+  threshold: number
+  reward_text: string
+  unlocked: boolean
+}
+
+interface Loyalty {
+  generations: number
+  level_index: number
+  level_name: string
+  next_level_name: string | null
+  next_level_threshold: number | null
+  reward_tier: SubscriptionTier | null
+  reward_expires_at: string | null
+  reward_video_credits: number
+  levels: LevelInfo[]
+}
 
 const TIERS: {
   id: SubscriptionTier
@@ -38,6 +58,15 @@ export default function ProfilePage() {
   const { id, subscriptionTier, requestsToday } = useUserStore()
   const [pendingTier, setPendingTier] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [loyalty, setLoyalty] = useState<Loyalty | null>(null)
+
+  useEffect(() => {
+    if (!id) return
+    api
+      .get<Loyalty>(`/api/user/${id}/loyalty`)
+      .then((res) => setLoyalty(res.data))
+      .catch(() => {})
+  }, [id])
 
   const handleUpgrade = async (tier: SubscriptionTier) => {
     haptic('light')
@@ -78,6 +107,71 @@ export default function ProfilePage() {
         <div className="mb-4">
           <Notice tone="amber">{notice}</Notice>
         </div>
+      )}
+
+      {loyalty && (
+        <Card className="mb-4 text-left">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Уровень активности</p>
+              <h2 className="mt-0.5 text-lg font-bold">{loyalty.level_name}</h2>
+            </div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/10">
+              <Trophy size={18} />
+            </div>
+          </div>
+
+          {loyalty.next_level_threshold ? (
+            <>
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+                <div
+                  className="h-full rounded-full bg-black dark:bg-white"
+                  style={{
+                    width: `${Math.min(100, (loyalty.generations / loyalty.next_level_threshold) * 100)}%`,
+                  }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {loyalty.generations} / {loyalty.next_level_threshold} генераций до уровня «{loyalty.next_level_name}»
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Максимальный уровень — всего генераций: {loyalty.generations}
+            </p>
+          )}
+
+          {loyalty.reward_tier && loyalty.reward_expires_at && (
+            <div className="mt-3 rounded-xl bg-black p-3 text-white dark:bg-white dark:text-black">
+              <p className="text-sm font-semibold">
+                🎁 Бонусный тариф {loyalty.reward_tier} до{' '}
+                {new Date(loyalty.reward_expires_at).toLocaleDateString('ru-RU')}
+              </p>
+              {loyalty.reward_video_credits > 0 && (
+                <p className="mt-0.5 text-xs opacity-80">Бесплатных видео осталось: {loyalty.reward_video_credits}</p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-4 space-y-2">
+            {loyalty.levels.map((lvl) => (
+              <div key={lvl.index} className="flex items-start gap-2 text-sm">
+                <div
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${
+                    lvl.unlocked
+                      ? 'bg-black text-white dark:bg-white dark:text-black'
+                      : 'bg-gray-100 text-gray-400 dark:bg-white/10 dark:text-gray-600'
+                  }`}
+                >
+                  {lvl.unlocked ? <Check size={12} /> : lvl.index}
+                </div>
+                <span className={lvl.unlocked ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-600'}>
+                  <span className="font-medium">{lvl.name}</span> · {lvl.threshold} ген. — {lvl.reward_text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
       )}
 
       <div className="space-y-3 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">

@@ -61,12 +61,10 @@ export const useVideoStore = create<VideoState>((set) => ({
       pollStatus(res.data.request_id, set)
     } catch (err) {
       let message = 'Не удалось отправить запрос. Проверьте, что backend запущен.'
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        message = 'Видео доступно только на тарифе VIP — оформите подписку в профиле.'
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        message = err.response.data.detail
       } else if (axios.isAxiosError(err) && err.response?.status === 429) {
         message = 'Дневной лимит запросов исчерпан. Лимит обновится завтра.'
-      } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
-        message = err.response.data.detail
       }
       set({ status: 'error', error: message })
       haptic('error')

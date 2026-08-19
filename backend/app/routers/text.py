@@ -10,6 +10,7 @@ from app.schemas.generation import TextGenerateRequest
 from app.schemas.api_request import ApiRequestOut
 from app.services.history import get_request_history
 from app.services.limits import REQUEST_LIMITS
+from app.services.loyalty import check_level_up, get_effective_tier
 from app.services.openrouter import MODEL_SLUGS, OpenRouterError, chat_completion
 
 router = APIRouter(tags=["text"])
@@ -20,7 +21,7 @@ async def _generate(model_key: str, payload: TextGenerateRequest, db: AsyncSessi
     if user is None:
         raise HTTPException(status_code=404, detail="user not found")
 
-    limit = REQUEST_LIMITS.get(user.subscription_tier, 0)
+    limit = REQUEST_LIMITS.get(get_effective_tier(user), 0)
     if limit == 0:
         raise HTTPException(status_code=403, detail="Текстовые запросы доступны начиная с тарифа Starter")
     if user.requests_today >= limit:
@@ -59,6 +60,7 @@ async def _generate(model_key: str, payload: TextGenerateRequest, db: AsyncSessi
         )
     )
     await db.commit()
+    await check_level_up(db, user)
 
     return {"text": text}
 
