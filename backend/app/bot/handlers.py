@@ -35,15 +35,15 @@ async def cmd_start(message: Message) -> None:
     name = message.from_user.first_name or (f"@{message.from_user.username}" if message.from_user.username else "друг")
     features = (
         "💬 <b>Текст</b> — Claude Sonnet 5, GPT-4o mini\n"
-        "🎨 <b>Фото</b> — Flux.1 Pro, DALL-E 3\n"
-        "🎬 <b>Видео</b> — Runway Gen-3\n"
+        "🎨 <b>Фото</b> — Flux.1 Pro\n"
+        "🎬 <b>Видео</b> — MiniMax Video-01\n"
         "✨ <b>Промпты</b> — библиотека готовых запросов"
     )
 
     if is_new:
         text = (
             f"Привет, {name}! 👋\n\n"
-            f"Добро пожаловать в Zeniteiz Ai — всё это доступно в одном приложении:\n\n"
+            f"Добро пожаловать в Zenit Ai — всё это доступно в одном приложении:\n\n"
             f"{features}\n\n"
             "Вам открыт бесплатный доступ уровня Starter на 3 дня. Нажмите кнопку ниже, чтобы начать."
         )

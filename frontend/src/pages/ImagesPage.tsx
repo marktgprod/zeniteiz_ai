@@ -29,11 +29,13 @@ export default function ImagesPage() {
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title="Изображения" />
 
-      <SegmentedTabs
-        options={IMAGE_MODELS.map((m) => ({ id: m.id, label: m.label }))}
-        value={model}
-        onChange={(id) => setModel(id)}
-      />
+      {IMAGE_MODELS.length > 1 && (
+        <SegmentedTabs
+          options={IMAGE_MODELS.map((m) => ({ id: m.id, label: m.label }))}
+          value={model}
+          onChange={(id) => setModel(id)}
+        />
+      )}
 
       <textarea
         value={prompt}

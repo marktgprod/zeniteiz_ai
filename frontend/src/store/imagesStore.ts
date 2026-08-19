@@ -3,10 +3,9 @@ import axios from 'axios'
 import { api } from '../lib/api'
 import { haptic } from '../lib/haptics'
 
-export const IMAGE_MODELS = [
-  { id: 'flux', label: 'Flux.1 Pro', endpoint: '/api/image/flux' },
-  { id: 'dalle3', label: 'DALL-E 3', endpoint: '/api/image/dalle3' },
-] as const
+// DALL-E 3 temporarily removed from selection (no OpenAI key configured yet) —
+// re-add the entry to bring the model tab back, ImagesPage shows tabs automatically once there's more than one.
+export const IMAGE_MODELS = [{ id: 'flux', label: 'Flux.1 Pro', endpoint: '/api/image/flux' }] as const
 
 export type ImageModelId = (typeof IMAGE_MODELS)[number]['id']
 

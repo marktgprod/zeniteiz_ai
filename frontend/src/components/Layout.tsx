@@ -48,7 +48,7 @@ export default function Layout() {
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col border-r border-gray-200/80 bg-white px-4 py-5 dark:border-white/10 dark:bg-black lg:flex">
         <div className="flex items-center gap-2 px-1">
           <img src="/logo.jpeg" alt="" className="h-7 w-7 rounded-lg object-cover dark:ring-1 dark:ring-white/15" />
-          <span className="text-sm font-semibold tracking-tight">Zeniteiz Ai</span>
+          <span className="text-sm font-semibold tracking-tight">Zenit Ai</span>
         </div>
         <span
           className={`mt-3 w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${TIER_STYLES[subscriptionTier]}`}
@@ -91,7 +91,7 @@ export default function Layout() {
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200/80 bg-white/90 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-black/90 lg:hidden">
           <div className="flex items-center gap-1.5">
             <img src="/logo.jpeg" alt="" className="h-6 w-6 rounded-lg object-cover dark:ring-1 dark:ring-white/15" />
-            <span className="text-sm font-semibold tracking-tight">Zeniteiz Ai</span>
+            <span className="text-sm font-semibold tracking-tight">Zenit Ai</span>
           </div>
           <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${TIER_STYLES[subscriptionTier]}`}>
             {subscriptionTier}

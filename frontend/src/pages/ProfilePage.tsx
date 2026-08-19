@@ -44,13 +44,13 @@ const TIERS: {
     id: 'PRO',
     name: 'Pro',
     price: '799 ₽/мес',
-    features: ['Всё из Starter', 'Flux.1 Pro + DALL-E 3', 'До 100 запросов в день', 'Промпт-генератор'],
+    features: ['Всё из Starter', 'Flux.1 Pro', 'До 100 запросов в день', 'Промпт-генератор'],
   },
   {
     id: 'VIP',
     name: 'VIP / Lifetime',
     price: '3999 ₽ разово',
-    features: ['Всё из Pro', 'Runway Gen-3 (видео)', 'Безлимитные запросы', 'Личный чат с разработчиком'],
+    features: ['Всё из Pro', 'MiniMax Video-01 (видео)', 'Безлимитные запросы', 'Личный чат с разработчиком'],
   },
 ]
 

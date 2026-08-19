@@ -5,8 +5,8 @@ import { isRunningInTelegram } from '../lib/telegram'
 
 const QUICK_ACTIONS = [
   { to: '/text', label: 'Текст', hint: 'Claude · GPT-4o mini', icon: MessageSquare },
-  { to: '/images', label: 'Изображения', hint: 'Flux.1 Pro · DALL-E 3', icon: Image },
-  { to: '/video', label: 'Видео', hint: 'Runway Gen-3', icon: Video },
+  { to: '/images', label: 'Изображения', hint: 'Flux.1 Pro', icon: Image },
+  { to: '/video', label: 'Видео', hint: 'MiniMax Video-01', icon: Video },
   { to: '/prompts', label: 'Промпты', hint: 'Библиотека запросов', icon: Sparkles },
 ]
 
