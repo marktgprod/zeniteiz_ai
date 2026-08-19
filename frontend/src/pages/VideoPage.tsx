@@ -3,6 +3,7 @@ import { Clapperboard, Download } from 'lucide-react'
 import { inputClasses, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { downloadFile } from '../lib/download'
 import { useUserStore } from '../store/userStore'
 import { useVideoStore } from '../store/videoStore'
 
@@ -65,15 +66,17 @@ export default function VideoPage() {
       {videoUrl && (
         <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10">
           <video src={videoUrl} controls autoPlay loop className="w-full" />
-          <a
-            href={videoUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 border-t border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 dark:border-white/10 dark:text-gray-300 dark:hover:text-white"
+          <button
+            type="button"
+            onClick={() => {
+              haptic('light')
+              downloadFile(videoUrl, 'zeniteiz-video.mp4')
+            }}
+            className="flex w-full items-center justify-center gap-2 border-t border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 dark:border-white/10 dark:text-gray-300 dark:hover:text-white"
           >
             <Download size={14} />
             Скачать видео
-          </a>
+          </button>
         </div>
       )}
     </div>

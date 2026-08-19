@@ -5,6 +5,7 @@ import { api } from '../lib/api'
 import { inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { downloadFile } from '../lib/download'
 import { useUserStore } from '../store/userStore'
 
 const MODELS = [
@@ -83,13 +84,15 @@ export default function ImagesPage() {
       <div className="mt-4 space-y-3">{error && <Notice tone="red">{error}</Notice>}</div>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        {images.map((url) => (
-          <a
+        {images.map((url, i) => (
+          <button
             key={url}
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            className="group relative aspect-square overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10"
+            type="button"
+            onClick={() => {
+              haptic('light')
+              downloadFile(url, `zeniteiz-image-${i + 1}.jpg`)
+            }}
+            className="group relative aspect-square overflow-hidden rounded-2xl border border-gray-200 text-left dark:border-white/10"
           >
             <img src={url} alt={prompt} className="h-full w-full object-cover" />
             <div className="absolute inset-0 flex items-end justify-end bg-black/0 p-2 opacity-0 transition-opacity group-hover:bg-black/20 group-hover:opacity-100">
@@ -97,7 +100,7 @@ export default function ImagesPage() {
                 <Download size={14} />
               </div>
             </div>
-          </a>
+          </button>
         ))}
         {images.length === 0 &&
           Array.from({ length: 4 }).map((_, i) => (
