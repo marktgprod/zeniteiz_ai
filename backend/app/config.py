@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     fal_api_key: str = ""
     openai_api_key: str = ""
 
+    # Tribute signs webhooks with the same key used for API auth — there's no
+    # separate webhook-only secret, so this should just be the Tribute API key.
     tribute_webhook_secret: str = ""
 
     cors_origins: list[str] = ["http://localhost:5173"]

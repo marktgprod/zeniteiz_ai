@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -5,44 +6,67 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
-from app.deps import get_user_or_404
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.user import SubscriptionTier, User
 from app.schemas.payment import SubscriptionOut, TributeWebhookPayload
 from app.services.tribute import verify_webhook_signature
+from app.services.user import get_or_create_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["payments"])
+
+# subscription_name is whatever we typed when creating the product in Tribute's
+# dashboard ("Starter"/"Pro"/"VIP") — match case-insensitively since it's free text.
+TIER_BY_NAME = {"starter": SubscriptionTier.STARTER, "pro": SubscriptionTier.PRO, "vip": SubscriptionTier.VIP}
+
+# Confirmed via a live test payment: real event names are snake_case
+# ("new_subscription"), not the camelCase shown in Tribute's docs.
+GRANT_EVENTS = {"new_subscription", "renewed_subscription"}
 
 
 @router.post("/webhook/tribute", status_code=200)
 async def tribute_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    x_tribute_signature: str = Header(default=""),
+    trbt_signature: str = Header(default="", alias="trbt-signature"),
 ) -> dict:
     raw_body = await request.body()
-    if not verify_webhook_signature(raw_body, x_tribute_signature):
+    if not verify_webhook_signature(raw_body, trbt_signature):
         raise HTTPException(status_code=401, detail="invalid signature")
 
-    payload = TributeWebhookPayload.model_validate_json(raw_body)
+    event = TributeWebhookPayload.model_validate_json(raw_body)
 
-    result = await db.execute(select(User).where(User.telegram_user_id == payload.telegram_user_id))
+    if event.name not in GRANT_EVENTS:
+        logger.info("Ignoring Tribute event %s", event.name)
+        return {"ok": True}
+
+    data = event.payload
+    tier = TIER_BY_NAME.get(data.subscription_name.strip().lower())
+    if tier is None:
+        raise HTTPException(status_code=400, detail=f"unknown subscription_name: {data.subscription_name}")
+
+    result = await db.execute(select(User).where(User.telegram_user_id == data.telegram_user_id))
     user = result.scalar_one_or_none()
     if user is None:
-        raise HTTPException(status_code=404, detail="user not found")
+        # Someone could reach a Tribute checkout link without ever having opened
+        # our bot first — create the account rather than drop a real payment.
+        user, _ = await get_or_create_user(db, data.telegram_user_id, data.telegram_username, None)
 
-    subscription = Subscription(
-        user_id=user.id,
-        tier=payload.tier,
-        amount=payload.amount,
-        tribute_transaction_id=payload.tribute_transaction_id,
-        status=SubscriptionStatus.ACTIVE,
-        expires_at=payload.expires_at,
+    db.add(
+        Subscription(
+            user_id=user.id,
+            tier=tier.value,
+            amount=data.amount / 100,
+            payment_method="tribute",
+            tribute_transaction_id=str(data.period_id),
+            status=SubscriptionStatus.ACTIVE,
+            expires_at=data.expires_at,
+        )
     )
-    db.add(subscription)
 
-    user.subscription_tier = SubscriptionTier(payload.tier)
-    user.subscription_expires_at = payload.expires_at
+    user.subscription_tier = tier
+    user.subscription_expires_at = data.expires_at
 
     await db.commit()
     return {"ok": True}
@@ -54,9 +78,3 @@ async def list_payments(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) 
         select(Subscription).where(Subscription.user_id == user_id).order_by(Subscription.started_at.desc())
     )
     return list(result.scalars().all())
-
-
-@router.post("/api/user/{user_id}/upgrade")
-async def upgrade(user_id: uuid.UUID, tier: str, db: AsyncSession = Depends(get_db)) -> dict:
-    await get_user_or_404(user_id, db)
-    raise HTTPException(status_code=501, detail="Tribute checkout link generation pending")

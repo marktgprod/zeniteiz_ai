@@ -4,12 +4,27 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-class TributeWebhookPayload(BaseModel):
+class TributeSubscriptionData(BaseModel):
+    subscription_name: str
+    subscription_id: int
+    period_id: int
+    period: str
+    price: int
+    amount: int
+    currency: str
     telegram_user_id: int
-    tier: str
-    amount: float
-    tribute_transaction_id: str
+    telegram_username: str | None = None
     expires_at: datetime
+    type: str
+
+
+class TributeWebhookPayload(BaseModel):
+    """Real shape confirmed against a live test payment — Tribute's own OpenAPI
+    docs describe a different (shop-order) schema that doesn't match what's
+    actually delivered for subscription events."""
+
+    name: str
+    payload: TributeSubscriptionData
 
 
 class SubscriptionOut(BaseModel):
