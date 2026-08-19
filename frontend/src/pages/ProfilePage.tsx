@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
 import { Check, ChevronRight, BarChart3, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
@@ -7,6 +6,7 @@ import { useUserStore, type SubscriptionTier } from '../store/userStore'
 import { Card, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { WebApp } from '../lib/telegram'
 
 interface LevelInfo {
   index: number
@@ -32,31 +32,34 @@ const TIERS: {
   id: SubscriptionTier
   name: string
   price: string
+  tributeLink: string
   features: string[]
 }[] = [
   {
     id: 'STARTER',
     name: 'Starter',
     price: '299 ₽/мес',
+    tributeLink: 'https://t.me/tribute/app?startapp=s13MQ',
     features: ['Claude Sonnet 5 + GPT-4o mini', 'До 50 запросов в день', 'Библиотека промптов', 'Ежедневный digest новостей'],
   },
   {
     id: 'PRO',
     name: 'Pro',
     price: '799 ₽/мес',
+    tributeLink: 'https://t.me/tribute/app?startapp=s13MR',
     features: ['Всё из Starter', 'Flux.1 Pro', 'До 100 запросов в день', 'Промпт-генератор'],
   },
   {
     id: 'VIP',
     name: 'VIP',
     price: '3999 ₽/год',
+    tributeLink: 'https://t.me/tribute/app?startapp=s13N2',
     features: ['Всё из Pro', 'MiniMax Video-01 (видео)', 'Безлимитные запросы', 'Личный чат с разработчиком'],
   },
 ]
 
 export default function ProfilePage() {
   const { id, subscriptionTier, requestsToday } = useUserStore()
-  const [pendingTier, setPendingTier] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [loyalty, setLoyalty] = useState<Loyalty | null>(null)
 
@@ -68,30 +71,20 @@ export default function ProfilePage() {
       .catch(() => {})
   }, [id])
 
-  const handleUpgrade = async (tier: SubscriptionTier) => {
+  const handleUpgrade = (tier: (typeof TIERS)[number]) => {
     haptic('light')
-    track('upgrade_click', { tier })
+    track('upgrade_click', { tier: tier.id })
 
     if (!id) {
       setNotice('Откройте приложение через Telegram-бота, чтобы оформить подписку.')
       return
     }
 
-    setPendingTier(tier)
     setNotice(null)
-    try {
-      await api.post(`/api/user/${id}/upgrade`, null, { params: { tier } })
-      haptic('success')
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 501) {
-        setNotice('Оплата через Tribute ещё не подключена — появится на следующем этапе.')
-        haptic('warning')
-      } else {
-        setNotice('Не удалось начать оформление подписки.')
-        haptic('error')
-      }
-    } finally {
-      setPendingTier(null)
+    if (WebApp) {
+      WebApp.openTelegramLink(tier.tributeLink)
+    } else {
+      window.open(tier.tributeLink, '_blank')
     }
   }
 
@@ -208,19 +201,15 @@ export default function ProfilePage() {
               </ul>
               {isVip ? (
                 <button
-                  onClick={() => handleUpgrade(tier.id)}
-                  disabled={isCurrent || pendingTier === tier.id}
+                  onClick={() => handleUpgrade(tier)}
+                  disabled={isCurrent}
                   className="mt-4 w-full rounded-xl bg-white py-2.5 text-sm font-semibold text-black transition-opacity hover:opacity-85 disabled:opacity-50 dark:bg-black dark:text-white"
                 >
-                  {isCurrent ? 'Текущий тариф' : pendingTier === tier.id ? 'Оформление...' : `Выбрать ${tier.name}`}
+                  {isCurrent ? 'Текущий тариф' : `Выбрать ${tier.name}`}
                 </button>
               ) : (
-                <PrimaryButton
-                  onClick={() => handleUpgrade(tier.id)}
-                  disabled={isCurrent || pendingTier === tier.id}
-                  className="mt-4 w-full"
-                >
-                  {isCurrent ? 'Текущий тариф' : pendingTier === tier.id ? 'Оформление...' : `Выбрать ${tier.name}`}
+                <PrimaryButton onClick={() => handleUpgrade(tier)} disabled={isCurrent} className="mt-4 w-full">
+                  {isCurrent ? 'Текущий тариф' : `Выбрать ${tier.name}`}
                 </PrimaryButton>
               )}
             </div>
