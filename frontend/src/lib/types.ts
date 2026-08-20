@@ -13,6 +13,9 @@ export interface NewsItem {
   title: string
   summary: string
   content: string
+  title_en: string | null
+  summary_en: string | null
+  content_en: string | null
   source_url: string | null
   published_at: string
 }

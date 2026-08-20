@@ -60,22 +60,32 @@ async def _fetch_feed(session: aiohttp.ClientSession, url: str) -> list[dict]:
         return []
 
 
-async def _translate_article(title: str, description: str) -> tuple[str, str]:
+async def _translate_article(title: str, description: str) -> dict[str, str]:
+    """Source feeds are English-only, so the "en" fields aren't machine-translated
+    from Russian — they're a clean, consistently-formatted rewrite of the original
+    (RSS titles/descriptions are often truncated or carry HTML cruft), produced in
+    the same call as the Russian translation to keep both versions the same length
+    and tone."""
     prompt = (
-        'Переведи и кратко перескажи новость об ИИ на русском для дайджеста в приложении. '
-        'Ответь строго в формате JSON: {"title": "...", "summary": "..."}. '
-        "title — короткий переведённый заголовок. summary — 2-3 предложения по-русски.\n\n"
-        f"Заголовок: {title}\nОписание: {description}"
+        "Перескажи новость об ИИ для дайджеста в приложении, на русском и на английском. "
+        'Ответь строго в формате JSON: {"title_ru": "...", "summary_ru": "...", "title_en": "...", "summary_en": "..."}. '
+        "title_* — короткий заголовок. summary_* — 2-3 предложения.\n\n"
+        f"Original title: {title}\nOriginal description: {description}"
     )
     data = await chat_completion(
         MODEL_SLUGS["gpt4o"],
         [{"role": "user", "content": prompt}],
         temperature=0.4,
-        max_tokens=300,
+        max_tokens=500,
         response_format={"type": "json_object"},
     )
     parsed = json.loads(data["choices"][0]["message"]["content"])
-    return parsed["title"], parsed["summary"]
+    return {
+        "title_ru": parsed["title_ru"],
+        "summary_ru": parsed["summary_ru"],
+        "title_en": parsed["title_en"],
+        "summary_en": parsed["summary_en"],
+    }
 
 
 async def fetch_and_store_news(db: AsyncSession) -> int:
@@ -101,16 +111,19 @@ async def fetch_and_store_news(db: AsyncSession) -> int:
             continue
 
         try:
-            title_ru, summary_ru = await _translate_article(item["title"], item["description"])
+            translated = await _translate_article(item["title"], item["description"])
         except (OpenRouterError, KeyError, json.JSONDecodeError):
             logger.warning("Failed to translate news item %s", item["link"], exc_info=True)
             continue
 
         db.add(
             NewsItem(
-                title=title_ru,
-                summary=summary_ru,
-                content=summary_ru,
+                title=translated["title_ru"],
+                summary=translated["summary_ru"],
+                content=translated["summary_ru"],
+                title_en=translated["title_en"],
+                summary_en=translated["summary_en"],
+                content_en=translated["summary_en"],
                 source_url=item["link"],
                 published_at=item["published_at"] or datetime.now(timezone.utc),
             )
