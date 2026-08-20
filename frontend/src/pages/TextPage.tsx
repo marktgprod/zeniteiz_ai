@@ -1,22 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
-import { Send, Trash2 } from 'lucide-react'
+import { Paperclip, Send, Trash2, X } from 'lucide-react'
 import { Notice, PageHeader, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { fileToCompressedDataUrl } from '../lib/image'
 import { useT } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 import { TEXT_MODELS, useChatStore } from '../store/chatStore'
+
+const MAX_IMAGES = 4
 
 export default function TextPage() {
   const userId = useUserStore((s) => s.id)
   const { model, messages, pending, error, setModel, send, clear } = useChatStore()
   const [prompt, setPrompt] = useState('')
+  const [images, setImages] = useState<string[]>([])
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const t = useT()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages, pending])
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setUploadError(null)
+    const slice = Array.from(files).slice(0, MAX_IMAGES - images.length)
+    try {
+      const compressed = await Promise.all(slice.map((f) => fileToCompressedDataUrl(f)))
+      setImages((prev) => [...prev, ...compressed].slice(0, MAX_IMAGES))
+    } catch {
+      setUploadError(t('text.imageUploadError'))
+    }
+  }
 
   const handleSend = () => {
     const text = prompt.trim()
@@ -30,7 +48,9 @@ export default function TextPage() {
     }
 
     setPrompt('')
-    send(userId, text)
+    const toSend = images
+    setImages([])
+    send(userId, text, toSend.length > 0 ? toSend : undefined)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -84,6 +104,18 @@ export default function TextPage() {
                   : 'border border-gray-200 bg-white text-gray-900 dark:border-white/10 dark:bg-white/[0.05] dark:text-gray-100'
               }`}
             >
+              {m.images && m.images.length > 0 && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {m.images.map((img, j) => (
+                    <img
+                      key={j}
+                      src={img}
+                      alt=""
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
+                  ))}
+                </div>
+              )}
               {m.content}
             </div>
           </div>
@@ -110,7 +142,52 @@ export default function TextPage() {
         </div>
       )}
 
+      {uploadError && (
+        <div className="mt-3">
+          <Notice tone="red">{uploadError}</Notice>
+        </div>
+      )}
+
+      {images.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {images.map((img, i) => (
+            <div key={i} className="relative h-16 w-16 shrink-0">
+              <img src={img} alt="" className="h-full w-full rounded-lg object-cover" />
+              <button
+                onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                aria-label={t('text.removeImage')}
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black text-white shadow-sm dark:bg-white dark:text-black"
+              >
+                <X size={11} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="mt-3 flex items-end gap-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            handleFiles(e.target.files)
+            e.target.value = ''
+          }}
+        />
+        <button
+          onClick={() => {
+            haptic('light')
+            fileInputRef.current?.click()
+          }}
+          disabled={images.length >= MAX_IMAGES}
+          aria-label={t('text.attachImage')}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:text-gray-400 dark:hover:bg-white/[0.05]"
+        >
+          <Paperclip size={16} />
+        </button>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}

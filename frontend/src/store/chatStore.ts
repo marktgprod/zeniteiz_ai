@@ -11,7 +11,7 @@ export const TEXT_MODELS = [
 ] as const
 
 export type TextModelId = (typeof TEXT_MODELS)[number]['id']
-export type ChatMessage = { role: 'user' | 'assistant'; content: string }
+export type ChatMessage = { role: 'user' | 'assistant'; content: string; images?: string[] }
 
 interface ChatState {
   model: TextModelId
@@ -19,7 +19,7 @@ interface ChatState {
   pending: boolean
   error: string | null
   setModel: (id: TextModelId) => void
-  send: (userId: string, prompt: string) => Promise<void>
+  send: (userId: string, prompt: string, images?: string[]) => Promise<void>
   clear: () => void
 }
 
@@ -31,13 +31,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setModel: (id) => set({ model: id }),
 
-  send: async (userId, prompt) => {
+  send: async (userId, prompt, images) => {
     const model = TEXT_MODELS.find((m) => m.id === get().model)!
     const history = get().messages
-    set({ messages: [...history, { role: 'user', content: prompt }], pending: true, error: null })
+    set({ messages: [...history, { role: 'user', content: prompt, images }], pending: true, error: null })
 
     try {
-      const res = await api.post(model.endpoint, { user_id: userId, prompt, history })
+      const res = await api.post(model.endpoint, { user_id: userId, prompt, images, history })
       const reply = res.data.text ?? JSON.stringify(res.data)
       set((s) => ({ messages: [...s.messages, { role: 'assistant', content: reply }], pending: false }))
       haptic('success')

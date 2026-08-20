@@ -11,7 +11,7 @@ from app.schemas.api_request import ApiRequestOut
 from app.services.history import get_request_history
 from app.services.limits import REQUEST_LIMITS
 from app.services.loyalty import check_level_up, get_effective_tier
-from app.services.openrouter import MODEL_SLUGS, OpenRouterError, chat_completion
+from app.services.openrouter import MODEL_SLUGS, OpenRouterError, build_message_content, chat_completion
 
 router = APIRouter(tags=["text"])
 
@@ -29,8 +29,10 @@ async def _generate(model_key: str, payload: TextGenerateRequest, db: AsyncSessi
 
     model = MODEL_SLUGS[model_key]
 
-    messages = [{"role": m.role, "content": m.content} for m in payload.history[-20:]]
-    messages.append({"role": "user", "content": payload.prompt})
+    messages = [
+        {"role": m.role, "content": build_message_content(m.content, m.images)} for m in payload.history[-20:]
+    ]
+    messages.append({"role": "user", "content": build_message_content(payload.prompt, payload.images)})
 
     try:
         data = await chat_completion(model, messages, payload.temperature, payload.max_tokens)

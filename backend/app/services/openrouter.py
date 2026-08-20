@@ -18,6 +18,17 @@ class OpenRouterError(Exception):
     pass
 
 
+def build_message_content(text: str, images: list[str] | None = None) -> str | list[dict]:
+    """Plain string for text-only messages (cheaper to serialize, and some
+    models are picky about content shape); OpenAI-style multimodal parts array
+    only when images are actually attached. images are already data: URIs."""
+    if not images:
+        return text
+    parts: list[dict] = [{"type": "text", "text": text}]
+    parts.extend({"type": "image_url", "image_url": {"url": img}} for img in images)
+    return parts
+
+
 async def chat_completion(
     model: str,
     messages: list[dict[str, str]],

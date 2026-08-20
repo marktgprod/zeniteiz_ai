@@ -40,6 +40,9 @@ export const translations: Record<Language, Dict> = {
     'text.placeholder': 'Задайте вопрос — весь диалог сохранится здесь, пока вы не очистите чат.',
     'text.inputPlaceholder': 'Напишите сообщение...',
     'text.backgroundHint': 'Можно перейти на другую вкладку — ответ придёт в фоне.',
+    'text.attachImage': 'Прикрепить фото',
+    'text.removeImage': 'Удалить фото',
+    'text.imageUploadError': 'Не удалось загрузить изображение',
 
     'images.title': 'Изображения',
     'images.placeholder': 'Опишите изображение...',
@@ -164,6 +167,9 @@ export const translations: Record<Language, Dict> = {
     'text.placeholder': "Ask something — the whole conversation stays here until you clear the chat.",
     'text.inputPlaceholder': 'Type a message...',
     'text.backgroundHint': "You can switch tabs — the reply will arrive in the background.",
+    'text.attachImage': 'Attach photo',
+    'text.removeImage': 'Remove photo',
+    'text.imageUploadError': 'Could not upload the image',
 
     'images.title': 'Images',
     'images.placeholder': 'Describe the image...',

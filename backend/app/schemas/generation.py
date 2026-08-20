@@ -6,11 +6,13 @@ from pydantic import BaseModel
 class ChatMessage(BaseModel):
     role: str
     content: str
+    images: list[str] = []
 
 
 class TextGenerateRequest(BaseModel):
     user_id: uuid.UUID
     prompt: str
+    images: list[str] = []
     history: list[ChatMessage] = []
     temperature: float = 0.7
     max_tokens: int = 1024
