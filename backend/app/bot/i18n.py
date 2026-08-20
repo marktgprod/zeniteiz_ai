@@ -7,33 +7,33 @@ from typing import Any
 _MESSAGES: dict[str, dict[str, str]] = {
     "features": {
         "ru": (
-            "💬 <b>Текст</b> — Claude Sonnet 5, GPT-4o mini\n"
-            "🎨 <b>Фото</b> — Flux.1 Pro\n"
-            "🎬 <b>Видео</b> — MiniMax Video-01\n"
-            "✨ <b>Промпты</b> — библиотека готовых запросов"
+            "<b>Текст</b> — Claude Sonnet 5, GPT-4o mini\n"
+            "<b>Фото</b> — Flux.1 Pro\n"
+            "<b>Видео</b> — MiniMax Video-01\n"
+            "<b>Промпты</b> — библиотека готовых запросов"
         ),
         "en": (
-            "💬 <b>Text</b> — Claude Sonnet 5, GPT-4o mini\n"
-            "🎨 <b>Photos</b> — Flux.1 Pro\n"
-            "🎬 <b>Video</b> — MiniMax Video-01\n"
-            "✨ <b>Prompts</b> — a library of ready-to-use prompts"
+            "<b>Text</b> — Claude Sonnet 5, GPT-4o mini\n"
+            "<b>Photos</b> — Flux.1 Pro\n"
+            "<b>Video</b> — MiniMax Video-01\n"
+            "<b>Prompts</b> — a library of ready-to-use prompts"
         ),
     },
     "support_contact": {
-        "ru": "💬 Поддержка: @rassvetmr",
-        "en": "💬 Support: @rassvetmr",
+        "ru": "Поддержка: @rassvetmr",
+        "en": "Support: @rassvetmr",
     },
     "friend_fallback": {"ru": "друг", "en": "friend"},
     "welcome_new": {
         "ru": (
-            "Привет, {name}! 👋\n\n"
+            "Привет, {name}!\n\n"
             "Добро пожаловать в Zenit Ai — всё это доступно в одном приложении:\n\n"
             "{features}\n\n"
             "Вам открыт бесплатный доступ уровня Starter на 3 дня. Нажмите кнопку ниже, чтобы начать.\n\n"
             "{support}"
         ),
         "en": (
-            "Hi, {name}! 👋\n\n"
+            "Hi, {name}!\n\n"
             "Welcome to Zenit Ai — it's all available in one app:\n\n"
             "{features}\n\n"
             "You've got free Starter-tier access for 3 days. Tap the button below to get started.\n\n"
@@ -42,13 +42,13 @@ _MESSAGES: dict[str, dict[str, str]] = {
     },
     "welcome_back": {
         "ru": (
-            "С возвращением, {name}! 👋\n\n"
+            "С возвращением, {name}!\n\n"
             "Напомню, что доступно:\n\n{features}\n\n"
             "Откройте приложение, чтобы продолжить.\n\n"
             "{support}"
         ),
         "en": (
-            "Welcome back, {name}! 👋\n\n"
+            "Welcome back, {name}!\n\n"
             "Here's what's available:\n\n{features}\n\n"
             "Open the app to continue.\n\n"
             "{support}"
@@ -94,12 +94,12 @@ _MESSAGES: dict[str, dict[str, str]] = {
     },
     "invite_intro": {
         "ru": (
-            "🎁 <b>Приглашайте друзей — получайте бонусный доступ</b>\n\n"
+            "<b>Приглашайте друзей — получайте бонусный доступ</b>\n\n"
             "Когда друг перейдёт по вашей ссылке и оформит любую платную подписку — "
             "вы получите бонусные дни расширенного тарифа."
         ),
         "en": (
-            "🎁 <b>Invite friends — earn bonus access</b>\n\n"
+            "<b>Invite friends — earn bonus access</b>\n\n"
             "When a friend follows your link and gets any paid subscription — "
             "you get bonus days of an upgraded plan."
         ),
@@ -138,16 +138,16 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "en": "Open /app to use it.",
     },
     "referral_bonus_thanks": {
-        "ru": "🎉 Спасибо, что делитесь Zenit Ai! Уже {count} друзей оформили подписку по вашей ссылке.",
-        "en": "🎉 Thanks for sharing Zenit Ai! {count} friends have subscribed through your link so far.",
+        "ru": "Спасибо, что делитесь Zenit Ai! Уже {count} друзей оформили подписку по вашей ссылке.",
+        "en": "Thanks for sharing Zenit Ai! {count} friends have subscribed through your link so far.",
     },
     "referral_bonus_reward": {
         "ru": "Награда: {label}.",
         "en": "Reward: {label}.",
     },
     "level_up_title": {
-        "ru": "🏆 Новый уровень: <b>{level}</b>!",
-        "en": "🏆 New level: <b>{level}</b>!",
+        "ru": "Новый уровень: <b>{level}</b>!",
+        "en": "New level: <b>{level}</b>!",
     },
     "level_up_reward": {
         "ru": "Награда: {reward}",
@@ -155,13 +155,13 @@ _MESSAGES: dict[str, dict[str, str]] = {
     },
     "subscription_ended": {
         "ru": (
-            "⌛ Тариф {tier} закончился.\n\n"
+            "Тариф {tier} закончился.\n\n"
             "Оформите подписку Starter, Pro или VIP в приложении, чтобы продолжить пользоваться "
             "текстом, изображениями и видео от лучших ИИ-моделей.\n\n"
             "Откройте /app → Профиль, чтобы выбрать тариф."
         ),
         "en": (
-            "⌛ Your {tier} plan has ended.\n\n"
+            "Your {tier} plan has ended.\n\n"
             "Subscribe to Starter, Pro, or VIP in the app to keep using text, image, and video generation "
             "from the best AI models.\n\n"
             "Open /app → Profile to pick a plan."
@@ -169,14 +169,14 @@ _MESSAGES: dict[str, dict[str, str]] = {
     },
     "reward_expired": {
         "ru": (
-            "⌛ Бонусный доступ уровня {tier} за активность закончился — "
+            "Бонусный доступ уровня {tier} за активность закончился — "
             "это была награда за уровень в разделе «Профиль».\n\n"
             "Действует ваш обычный тариф ({real_tier}). "
             "Продолжайте пользоваться приложением, чтобы заработать следующую награду, "
             "или оформите подписку в /app → Профиль."
         ),
         "en": (
-            "⌛ Your bonus {tier} access from an activity reward has ended — "
+            "Your bonus {tier} access from an activity reward has ended — "
             "that was a reward from the «Profile» section.\n\n"
             "Your regular plan ({real_tier}) is active. "
             "Keep using the app to earn the next reward, "
@@ -184,16 +184,16 @@ _MESSAGES: dict[str, dict[str, str]] = {
         ),
     },
     "subscription_expiring": {
-        "ru": "⏳ Ваша подписка {tier} истекает {date}. Откройте /app, чтобы продлить.",
-        "en": "⏳ Your {tier} subscription expires on {date}. Open /app to renew.",
+        "ru": "Ваша подписка {tier} истекает {date}. Откройте /app, чтобы продлить.",
+        "en": "Your {tier} subscription expires on {date}. Open /app to renew.",
     },
     "near_limit": {
-        "ru": "⚡️ Вы использовали {today}/{limit} запросов на сегодня. Апгрейдните тариф в /app, чтобы снять ограничение.",
-        "en": "⚡️ You've used {today}/{limit} requests today. Upgrade your plan in /app to lift the limit.",
+        "ru": "Вы использовали {today}/{limit} запросов на сегодня. Апгрейдните тариф в /app, чтобы снять ограничение.",
+        "en": "You've used {today}/{limit} requests today. Upgrade your plan in /app to lift the limit.",
     },
     "marathon_day_unlocked": {
-        "ru": "🔥 Марафон «Заработок на ИИ»: открыт день {day} — {title}.\n\nОткройте /app → Заработок → Марафон.",
-        "en": "🔥 «Earn with AI» marathon: day {day} is now unlocked — {title}.\n\nOpen /app → Earn → Marathon.",
+        "ru": "Марафон «Заработок на ИИ»: открыт день {day} — {title}.\n\nОткройте /app → Заработок → Марафон.",
+        "en": "«Earn with AI» marathon: day {day} is now unlocked — {title}.\n\nOpen /app → Earn → Marathon.",
     },
 }
 
