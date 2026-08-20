@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from aiogram import Bot
 from sqlalchemy import select
 
+from app.bot.i18n import t
 from app.db import async_session
 from app.models.user import SubscriptionTier, User
 from app.services.limits import REQUEST_LIMITS
@@ -37,13 +38,7 @@ async def _downgrade_expired_and_upsell(bot: Bot) -> None:
             await db.commit()
 
             try:
-                await bot.send_message(
-                    user.telegram_user_id,
-                    f"⌛ Тариф {old_tier} закончился.\n\n"
-                    "Оформите подписку Starter, Pro или VIP в приложении, чтобы продолжить пользоваться "
-                    "текстом, изображениями и видео от лучших ИИ-моделей.\n\n"
-                    "Откройте /app → Профиль, чтобы выбрать тариф.",
-                )
+                await bot.send_message(user.telegram_user_id, t(user.language, "subscription_ended", tier=old_tier))
             except Exception:
                 logger.exception("Failed to notify user %s about subscription downgrade", user.telegram_user_id)
 
@@ -67,11 +62,7 @@ async def _notify_reward_expired(bot: Bot) -> None:
             try:
                 await bot.send_message(
                     user.telegram_user_id,
-                    f"⌛ Бонусный доступ уровня {old_reward_tier} за активность закончился — "
-                    "это была награда за уровень в разделе «Профиль».\n\n"
-                    f"Действует ваш обычный тариф ({user.subscription_tier.value}). "
-                    "Продолжайте пользоваться приложением, чтобы заработать следующую награду, "
-                    "или оформите подписку в /app → Профиль.",
+                    t(user.language, "reward_expired", tier=old_reward_tier, real_tier=user.subscription_tier.value),
                 )
             except Exception:
                 logger.exception("Failed to notify user %s about reward expiry", user.telegram_user_id)
@@ -90,8 +81,12 @@ async def _notify_expiring_subscriptions(bot: Bot) -> None:
             try:
                 await bot.send_message(
                     user.telegram_user_id,
-                    f"⏳ Ваша подписка {user.subscription_tier.value} истекает "
-                    f"{user.subscription_expires_at.strftime('%d.%m.%Y')}. Откройте /app, чтобы продлить.",
+                    t(
+                        user.language,
+                        "subscription_expiring",
+                        tier=user.subscription_tier.value,
+                        date=user.subscription_expires_at.strftime("%d.%m.%Y"),
+                    ),
                 )
                 user.last_expiry_reminder_at = now
                 await db.commit()
@@ -112,8 +107,7 @@ async def _notify_near_limit(bot: Bot) -> None:
             try:
                 await bot.send_message(
                     user.telegram_user_id,
-                    f"⚡️ Вы использовали {user.requests_today}/{limit} запросов на сегодня. "
-                    "Апгрейдните тариф в /app, чтобы снять ограничение.",
+                    t(user.language, "near_limit", today=user.requests_today, limit=limit),
                 )
                 user.last_limit_reminder_at = now
                 await db.commit()

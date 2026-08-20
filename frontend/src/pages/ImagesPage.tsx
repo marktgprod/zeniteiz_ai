@@ -4,6 +4,7 @@ import { inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { downloadFile } from '../lib/download'
+import { useT } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 import { IMAGE_MODELS, useImagesStore } from '../store/imagesStore'
 
@@ -11,6 +12,7 @@ export default function ImagesPage() {
   const userId = useUserStore((s) => s.id)
   const { model, images, pending, error, comingSoon, setModel, generate } = useImagesStore()
   const [prompt, setPrompt] = useState('')
+  const t = useT()
 
   const handleGenerate = () => {
     if (!prompt.trim()) return
@@ -18,7 +20,7 @@ export default function ImagesPage() {
     track('image_generate_click', { model })
 
     if (!userId) {
-      useImagesStore.setState({ error: 'Откройте приложение через Telegram-бота, чтобы отправлять запросы.' })
+      useImagesStore.setState({ error: t('error.openViaBot') })
       return
     }
 
@@ -27,7 +29,7 @@ export default function ImagesPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
-      <PageHeader title="Изображения" />
+      <PageHeader title={t('images.title')} />
 
       {IMAGE_MODELS.length > 1 && (
         <SegmentedTabs
@@ -40,7 +42,7 @@ export default function ImagesPage() {
       <textarea
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Опишите изображение..."
+        placeholder={t('images.placeholder')}
         rows={3}
         className={`mt-3 ${inputClasses}`}
       />
@@ -51,13 +53,11 @@ export default function ImagesPage() {
         className="mt-3 flex w-full items-center justify-center gap-2"
       >
         <Wand2 size={15} />
-        {pending ? 'Генерация...' : 'Сгенерировать'}
+        {pending ? t('images.generating') : t('images.generate')}
       </PrimaryButton>
 
       {pending && (
-        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
-          Можно перейти на другую вкладку — изображение появится здесь по готовности.
-        </p>
+        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">{t('images.backgroundHint')}</p>
       )}
 
       <div className="mt-4 space-y-3">

@@ -54,5 +54,10 @@ class User(Base):
     referral_qualified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     referral_gift_level: Mapped[int] = mapped_column(Integer, default=0)
 
+    # "ru" or "en" — drives both the mini app UI (fetched on login) and bot
+    # message language (looked up per-send, since messages are often sent
+    # proactively from cron/webhooks, not in response to a live request).
+    language: Mapped[str] = mapped_column(String, default="ru")
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_active: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

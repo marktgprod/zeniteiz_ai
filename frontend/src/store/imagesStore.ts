@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import axios from 'axios'
 import { api } from '../lib/api'
 import { haptic } from '../lib/haptics'
+import { translate } from '../lib/i18n'
+import { useUserStore } from '../store/userStore'
 
 // DALL-E 3 temporarily removed from selection (no OpenAI key configured yet) —
 // re-add the entry to bring the model tab back, ImagesPage shows tabs automatically once there's more than one.
@@ -37,19 +39,20 @@ export const useImagesStore = create<ImagesState>((set, get) => ({
       set((s) => ({ images: [...(res.data.images ?? []), ...s.images], pending: false }))
       haptic('success')
     } catch (err) {
+      const lang = useUserStore.getState().language
       let error: string | null = null
       let comingSoon: string | null = null
 
       if (axios.isAxiosError(err) && err.response?.status === 403) {
-        error = 'Изображения доступны с тарифа Pro — оформите подписку в профиле.'
+        error = translate(lang, 'error.imageTierRequired')
       } else if (axios.isAxiosError(err) && err.response?.status === 429) {
-        error = 'Дневной лимит запросов исчерпан. Лимит обновится завтра или повысьте тариф.'
+        error = translate(lang, 'error.dailyLimit')
       } else if (axios.isAxiosError(err) && err.response?.status === 501) {
-        comingSoon = err.response.data?.detail ?? 'Эта модель ещё не подключена.'
+        comingSoon = err.response.data?.detail ?? translate(lang, 'error.notModelAvailable')
       } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
         error = err.response.data.detail
       } else {
-        error = 'Не удалось отправить запрос. Проверьте, что backend запущен.'
+        error = translate(lang, 'error.generic')
       }
 
       set({ pending: false, error, comingSoon })

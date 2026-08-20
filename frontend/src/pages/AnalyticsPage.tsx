@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BarChart3 } from 'lucide-react'
 import { api } from '../lib/api'
 import { Card, CardSkeleton, Notice, PageHeader } from '../components/ui'
+import { useT } from '../lib/i18n'
 
 interface EventSummary {
   event_name: string
@@ -19,6 +20,7 @@ export default function AnalyticsPage() {
   const [stats, setStats] = useState<RequestStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const t = useT()
 
   useEffect(() => {
     Promise.all([
@@ -37,12 +39,10 @@ export default function AnalyticsPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
-      <PageHeader title="Аналитика" />
-      <p className="-mt-3 mb-4 text-sm text-gray-500 dark:text-gray-400">
-        Видно только вам — сводка по успешным генерациям.
-      </p>
+      <PageHeader title={t('analytics.title')} />
+      <p className="-mt-3 mb-4 text-sm text-gray-500 dark:text-gray-400">{t('analytics.subtitle')}</p>
 
-      {error && <Notice tone="red">Не удалось загрузить аналитику. Убедитесь, что backend запущен.</Notice>}
+      {error && <Notice tone="red">{t('analytics.loadError')}</Notice>}
 
       <div className="grid grid-cols-2 gap-3">
         {loading ? (
@@ -53,19 +53,19 @@ export default function AnalyticsPage() {
         ) : (
           <>
             <Card className="text-left">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Генераций сегодня</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.todayCount')}</p>
               <p className="mt-1 text-2xl font-bold">{stats?.today ?? 0}</p>
             </Card>
             <Card className="text-left">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Генераций всего</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('analytics.totalCount')}</p>
               <p className="mt-1 text-2xl font-bold">{stats?.total ?? 0}</p>
             </Card>
           </>
         )}
       </div>
-      <p className="mt-2 text-xs text-gray-400">Считаются только успешно завершённые генерации — текст, фото, видео.</p>
+      <p className="mt-2 text-xs text-gray-400">{t('analytics.onlySuccessful')}</p>
 
-      <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">По типам генераций</h2>
+      <h2 className="mt-6 mb-2 text-sm font-semibold text-gray-500 dark:text-gray-400">{t('analytics.byType')}</h2>
       <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {loading && Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
 
@@ -82,14 +82,14 @@ export default function AnalyticsPage() {
                   style={{ width: `${(e.count / maxCount) * 100}%` }}
                 />
               </div>
-              <p className="mt-1.5 text-xs text-gray-400">{e.unique_users} уникальных пользователей</p>
+              <p className="mt-1.5 text-xs text-gray-400">{t('analytics.uniqueUsers', { n: e.unique_users })}</p>
             </Card>
           ))}
 
         {!loading && !error && events.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-gray-600 lg:col-span-2">
             <BarChart3 size={28} strokeWidth={1.5} />
-            <p className="text-sm">Пока нет данных</p>
+            <p className="text-sm">{t('analytics.noData')}</p>
           </div>
         )}
       </div>

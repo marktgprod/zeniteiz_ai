@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.i18n import t
 from app.models.api_request import ApiRequest, RequestStatus
 from app.models.user import SubscriptionTier, User
 from app.services.rewards import TIER_RANK, get_effective_tier, grant_tier_boost, has_active_reward
@@ -26,12 +27,12 @@ __all__ = [
 @dataclass(frozen=True)
 class Level:
     index: int
-    name: str
+    name: dict[str, str]
     threshold: int
     reward_tier: SubscriptionTier | None
     reward_days: int
     reward_video_credits: int
-    reward_text: str
+    reward_text: dict[str, str]
 
 
 # Thresholds count lifetime *successful* generations (text+image+video combined).
@@ -47,11 +48,43 @@ class Level:
 # video credits at all: video requires effective tier == VIP, so a credit
 # attached to a Pro reward would just be dead and unusable.
 LEVELS: list[Level] = [
-    Level(0, "Новичок", 0, None, 0, 0, ""),
-    Level(1, "Активный", 50, SubscriptionTier.PRO, 2, 0, "2 дня тарифа Pro"),
-    Level(2, "Профи", 150, SubscriptionTier.PRO, 5, 0, "5 дней тарифа Pro"),
-    Level(3, "Мастер", 400, SubscriptionTier.VIP, 7, 3, "7 дней тарифа VIP"),
-    Level(4, "Легенда", 1000, SubscriptionTier.VIP, 14, 10, "14 дней тарифа VIP"),
+    Level(0, {"ru": "Новичок", "en": "Newbie"}, 0, None, 0, 0, {"ru": "", "en": ""}),
+    Level(
+        1,
+        {"ru": "Активный", "en": "Active"},
+        50,
+        SubscriptionTier.PRO,
+        2,
+        0,
+        {"ru": "2 дня тарифа Pro", "en": "2 days of Pro"},
+    ),
+    Level(
+        2,
+        {"ru": "Профи", "en": "Pro"},
+        150,
+        SubscriptionTier.PRO,
+        5,
+        0,
+        {"ru": "5 дней тарифа Pro", "en": "5 days of Pro"},
+    ),
+    Level(
+        3,
+        {"ru": "Мастер", "en": "Master"},
+        400,
+        SubscriptionTier.VIP,
+        7,
+        3,
+        {"ru": "7 дней тарифа VIP", "en": "7 days of VIP"},
+    ),
+    Level(
+        4,
+        {"ru": "Легенда", "en": "Legend"},
+        1000,
+        SubscriptionTier.VIP,
+        14,
+        10,
+        {"ru": "14 дней тарифа VIP", "en": "14 days of VIP"},
+    ),
 ]
 
 
@@ -96,10 +129,11 @@ async def check_level_up(db: AsyncSession, user: User) -> None:
 async def _notify_level_up(user: User, level: Level) -> None:
     from app.bot.dispatcher import create_bot
 
+    lang = user.language
     text = (
-        f"🏆 Новый уровень: <b>{level.name}</b>!\n\n"
-        f"Награда: {level.reward_text}\n\n"
-        "Откройте /app, чтобы воспользоваться."
+        f"{t(lang, 'level_up_title', level=level.name[lang])}\n\n"
+        f"{t(lang, 'level_up_reward', reward=level.reward_text[lang])}\n\n"
+        f"{t(lang, 'open_app_cta')}"
     )
     try:
         bot = create_bot()

@@ -5,6 +5,7 @@ import { CATEGORY_LABELS, type Prompt } from '../lib/types'
 import { Card, CardSkeleton, inputClasses, Notice, PageHeader } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { useT } from '../lib/i18n'
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
@@ -13,6 +14,7 @@ export default function PromptsPage() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const t = useT()
 
   useEffect(() => {
     api
@@ -41,13 +43,13 @@ export default function PromptsPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
-      <PageHeader title="Промпты" />
+      <PageHeader title={t('prompts.title')} />
 
       <div className="relative">
         <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
-          placeholder="Поиск по промптам..."
+          placeholder={t('prompts.search')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className={`${inputClasses} pl-9`}
@@ -63,7 +65,7 @@ export default function PromptsPage() {
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
           }`}
         >
-          Все
+          {t('prompts.all')}
         </button>
         {categories.map((c) => (
           <button
@@ -82,7 +84,7 @@ export default function PromptsPage() {
 
       {error && (
         <div className="mt-6">
-          <Notice tone="red">Не удалось загрузить промпты. Убедитесь, что backend запущен на VITE_API_URL.</Notice>
+          <Notice tone="red">{t('prompts.loadError')}</Notice>
         </div>
       )}
 
@@ -103,14 +105,14 @@ export default function PromptsPage() {
               className="mt-3 flex items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-900 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
             >
               {copiedId === prompt.id ? <Check size={13} /> : <Copy size={13} />}
-              {copiedId === prompt.id ? 'Скопировано' : 'Скопировать промпт'}
+              {copiedId === prompt.id ? t('prompts.copied') : t('prompts.copy')}
             </button>
           </Card>
         ))}
         {!loading && !error && filtered.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-10 text-gray-400 dark:text-gray-600 lg:col-span-2">
             <SearchX size={28} strokeWidth={1.5} />
-            <p className="text-sm">Ничего не найдено</p>
+            <p className="text-sm">{t('prompts.notFound')}</p>
           </div>
         )}
       </div>

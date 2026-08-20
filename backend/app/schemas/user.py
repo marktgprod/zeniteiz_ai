@@ -23,5 +23,10 @@ class UserOut(BaseModel):
     subscription_tier: SubscriptionTier
     subscription_expires_at: datetime | None
     requests_today: int
+    language: str
 
     model_config = {"from_attributes": True}
+
+
+class LanguageIn(BaseModel):
+    language: str

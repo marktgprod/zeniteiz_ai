@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.bot.i18n import t
 from app.models.user import SubscriptionTier, User
 from app.services.rewards import grant_tier_boost
 
@@ -21,7 +22,7 @@ class ReferralMilestone:
     tier: SubscriptionTier
     days: int
     video_credits: int
-    label: str
+    label: dict[str, str]
 
 
 # The bonus only fires once a referred friend actually pays for a subscription
@@ -31,8 +32,8 @@ class ReferralMilestone:
 # real money to qualify). Stacks with any active loyalty-level boost via
 # grant_tier_boost rather than overwriting it — see app/services/rewards.py.
 MILESTONES: list[ReferralMilestone] = [
-    ReferralMilestone(1, 1, SubscriptionTier.PRO, 3, 0, "3 дня тарифа Pro"),
-    ReferralMilestone(2, 5, SubscriptionTier.VIP, 7, 3, "7 дней тарифа VIP"),
+    ReferralMilestone(1, 1, SubscriptionTier.PRO, 3, 0, {"ru": "3 дня тарифа Pro", "en": "3 days of Pro"}),
+    ReferralMilestone(2, 5, SubscriptionTier.VIP, 7, 3, {"ru": "7 дней тарифа VIP", "en": "7 days of VIP"}),
 ]
 
 
@@ -85,10 +86,11 @@ async def process_referral_payment(db: AsyncSession, user: User) -> None:
 async def _notify_referral_bonus(referrer: User, milestone: ReferralMilestone, count: int) -> None:
     from app.bot.dispatcher import create_bot
 
+    lang = referrer.language
     text = (
-        f"🎉 Спасибо, что делитесь Zenit Ai! Уже {count} друзей оформили подписку по вашей ссылке.\n\n"
-        f"Награда: {milestone.label}.\n\n"
-        "Откройте /app, чтобы воспользоваться."
+        f"{t(lang, 'referral_bonus_thanks', count=count)}\n\n"
+        f"{t(lang, 'referral_bonus_reward', label=milestone.label[lang])}\n\n"
+        f"{t(lang, 'open_app_cta')}"
     )
     try:
         bot = create_bot()

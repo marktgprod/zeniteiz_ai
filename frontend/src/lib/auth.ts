@@ -9,6 +9,7 @@ interface LoginResponse {
   subscription_tier: 'FREE' | 'STARTER' | 'PRO' | 'VIP'
   subscription_expires_at: string | null
   requests_today: number
+  language: 'ru' | 'en'
 }
 
 export async function loginIfInTelegram(): Promise<void> {
@@ -28,6 +29,7 @@ export async function loginIfInTelegram(): Promise<void> {
       subscriptionTier: res.data.subscription_tier,
       subscriptionExpiresAt: res.data.subscription_expires_at,
       requestsToday: res.data.requests_today,
+      language: res.data.language,
       authChecked: true,
     })
   } catch {

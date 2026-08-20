@@ -3,6 +3,7 @@ import { Send, Trash2 } from 'lucide-react'
 import { Notice, PageHeader, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { useT } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 import { TEXT_MODELS, useChatStore } from '../store/chatStore'
 
@@ -11,6 +12,7 @@ export default function TextPage() {
   const { model, messages, pending, error, setModel, send, clear } = useChatStore()
   const [prompt, setPrompt] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const t = useT()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -23,7 +25,7 @@ export default function TextPage() {
     track('text_generate_click', { model })
 
     if (!userId) {
-      useChatStore.setState({ error: 'Откройте приложение через Telegram-бота, чтобы отправлять запросы.' })
+      useChatStore.setState({ error: t('error.openViaBot') })
       return
     }
 
@@ -41,7 +43,7 @@ export default function TextPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <div className="flex items-center justify-between">
-        <PageHeader title="Текст и рассуждение" />
+        <PageHeader title={t('text.title')} />
         {messages.length > 0 && (
           <button
             onClick={() => {
@@ -51,7 +53,7 @@ export default function TextPage() {
             className="mb-4 flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
           >
             <Trash2 size={13} />
-            Очистить
+            {t('text.clear')}
           </button>
         )}
       </div>
@@ -69,7 +71,7 @@ export default function TextPage() {
       >
         {messages.length === 0 && !pending && (
           <p className="flex h-full items-center justify-center px-6 text-center text-sm text-gray-400 dark:text-gray-500">
-            Задайте вопрос — весь диалог сохранится здесь, пока вы не очистите чат.
+            {t('text.placeholder')}
           </p>
         )}
 
@@ -99,9 +101,7 @@ export default function TextPage() {
       </div>
 
       {pending && (
-        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">
-          Можно перейти на другую вкладку — ответ придёт в фоне.
-        </p>
+        <p className="mt-2 text-center text-xs text-gray-400 dark:text-gray-500">{t('text.backgroundHint')}</p>
       )}
 
       {error && (
@@ -115,7 +115,7 @@ export default function TextPage() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Напишите сообщение..."
+          placeholder={t('text.inputPlaceholder')}
           rows={1}
           className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm placeholder:text-gray-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-white/10 dark:bg-white/[0.03] dark:placeholder:text-gray-500 dark:focus:border-white dark:focus:ring-white/10"
         />

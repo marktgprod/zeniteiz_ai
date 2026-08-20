@@ -7,16 +7,17 @@ import { useChatStore } from '../store/chatStore'
 import { useImagesStore } from '../store/imagesStore'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
+import { useT, setLanguage } from '../lib/i18n'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Главная', end: true, icon: Home },
-  { to: '/text', label: 'Текст', icon: MessageSquare },
-  { to: '/images', label: 'Фото', icon: Image },
-  { to: '/video', label: 'Видео', icon: Video },
-  { to: '/prompts', label: 'Промпты', icon: Sparkles },
-  { to: '/news', label: 'Новости', icon: Newspaper },
-  { to: '/community', label: 'Люди', icon: Users },
-  { to: '/profile', label: 'Профиль', icon: User },
+  { to: '/', labelKey: 'nav.home', end: true, icon: Home },
+  { to: '/text', labelKey: 'nav.text', icon: MessageSquare },
+  { to: '/images', labelKey: 'nav.images', icon: Image },
+  { to: '/video', labelKey: 'nav.video', icon: Video },
+  { to: '/prompts', labelKey: 'nav.prompts', icon: Sparkles },
+  { to: '/news', labelKey: 'nav.news', icon: Newspaper },
+  { to: '/community', labelKey: 'nav.community', icon: Users },
+  { to: '/profile', labelKey: 'nav.profile', icon: User },
 ]
 
 const TIER_STYLES: Record<string, string> = {
@@ -24,6 +25,30 @@ const TIER_STYLES: Record<string, string> = {
   STARTER: 'bg-gray-200 text-gray-700 dark:bg-white/15 dark:text-gray-200',
   PRO: 'bg-gray-900 text-white dark:bg-white/30 dark:text-white',
   VIP: 'bg-black text-white dark:bg-white dark:text-black',
+}
+
+function LanguageToggle() {
+  const id = useUserStore((s) => s.id)
+  const language = useUserStore((s) => s.language)
+
+  const handleToggle = () => {
+    haptic('light')
+    const next = language === 'ru' ? 'en' : 'ru'
+    if (id) {
+      setLanguage(id, next)
+    } else {
+      useUserStore.getState().setUser({ language: next })
+    }
+  }
+
+  return (
+    <button
+      onClick={handleToggle}
+      className="rounded-full border border-gray-200 px-2.5 py-1 text-[11px] font-semibold text-gray-500 transition-colors hover:border-gray-400 hover:text-gray-900 dark:border-white/10 dark:text-gray-400 dark:hover:border-white/30 dark:hover:text-white"
+    >
+      {language === 'ru' ? 'EN' : 'RU'}
+    </button>
+  )
 }
 
 export default function Layout() {
@@ -37,6 +62,7 @@ export default function Layout() {
     '/video': videoPending,
   }
   const location = useLocation()
+  const t = useT()
 
   useEffect(() => {
     track('page_view', { path: location.pathname })
@@ -48,13 +74,14 @@ export default function Layout() {
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col border-r border-gray-200/80 bg-white px-4 py-5 dark:border-white/10 dark:bg-black lg:flex">
         <div className="flex items-center gap-2 px-1">
           <img src="/logo.jpeg" alt="" className="h-7 w-7 rounded-lg object-cover dark:ring-1 dark:ring-white/15" />
-          <span className="text-sm font-semibold tracking-tight">Zenit Ai</span>
+          <span className="text-sm font-semibold tracking-tight">{t('brand.name')}</span>
         </div>
-        <span
-          className={`mt-3 w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${TIER_STYLES[subscriptionTier]}`}
-        >
-          {subscriptionTier}
-        </span>
+        <div className="mt-3 flex items-center gap-2">
+          <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${TIER_STYLES[subscriptionTier]}`}>
+            {subscriptionTier}
+          </span>
+          <LanguageToggle />
+        </div>
 
         <nav className="mt-6 flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map((item) => {
@@ -79,7 +106,7 @@ export default function Layout() {
                     <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                   )}
                 </span>
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             )
           })}
@@ -91,11 +118,14 @@ export default function Layout() {
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200/80 bg-white/90 px-4 py-3 backdrop-blur-md dark:border-white/10 dark:bg-black/90 lg:hidden">
           <div className="flex items-center gap-1.5">
             <img src="/logo.jpeg" alt="" className="h-6 w-6 rounded-lg object-cover dark:ring-1 dark:ring-white/15" />
-            <span className="text-sm font-semibold tracking-tight">Zenit Ai</span>
+            <span className="text-sm font-semibold tracking-tight">{t('brand.name')}</span>
           </div>
-          <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${TIER_STYLES[subscriptionTier]}`}>
-            {subscriptionTier}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${TIER_STYLES[subscriptionTier]}`}>
+              {subscriptionTier}
+            </span>
+            <LanguageToggle />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto pb-20 lg:pb-10">
@@ -132,7 +162,7 @@ export default function Layout() {
                         <span className="absolute right-0 top-0 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                       )}
                     </div>
-                    {item.label}
+                    {t(item.labelKey)}
                   </>
                 )}
               </NavLink>

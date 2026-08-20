@@ -1,13 +1,12 @@
 from aiogram import Bot, F, Router
 from aiogram.filters import Command, CommandObject
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message, WebAppInfo
-from sqlalchemy import select
 
+from app.bot.i18n import t
 from app.config import settings
 from app.db import async_session
-from app.models.user import User
 from app.services.referral import MILESTONES, count_qualified_referrals, parse_referrer_telegram_id, referral_link
-from app.services.user import get_or_create_user
+from app.services.user import get_or_create_user, get_user_by_telegram_id
 
 router = Router()
 
@@ -23,19 +22,12 @@ BOT_COMMANDS: list[tuple[str, str]] = [
     ("help", "Список всех команд"),
 ]
 
-HELP_TEXT = (
-    "<b>Доступные команды</b>\n\n"
-    "/app — открыть приложение\n"
-    "/stats — моя статистика и подписка\n"
-    "/invite — пригласить друзей и получить подарок\n"
-    "/support &lt;текст&gt; — написать в поддержку\n"
-    "/help — это сообщение"
-)
 
-
-def _webapp_keyboard() -> InlineKeyboardMarkup:
+def _webapp_keyboard(lang: str | None) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="Открыть приложение", web_app=WebAppInfo(url=settings.mini_app_url))]]
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "webapp_button"), web_app=WebAppInfo(url=settings.mini_app_url))]
+        ]
     )
 
 
@@ -52,61 +44,54 @@ async def cmd_start(message: Message, command: CommandObject) -> None:
             referrer_telegram_id=referrer_telegram_id,
         )
 
-    name = message.from_user.first_name or (f"@{message.from_user.username}" if message.from_user.username else "друг")
-    features = (
-        "💬 <b>Текст</b> — Claude Sonnet 5, GPT-4o mini\n"
-        "🎨 <b>Фото</b> — Flux.1 Pro\n"
-        "🎬 <b>Видео</b> — MiniMax Video-01\n"
-        "✨ <b>Промпты</b> — библиотека готовых запросов"
-    )
-
-    support = "💬 Поддержка: @rassvetmr"
-
-    if is_new:
-        text = (
-            f"Привет, {name}! 👋\n\n"
-            f"Добро пожаловать в Zenit Ai — всё это доступно в одном приложении:\n\n"
-            f"{features}\n\n"
-            "Вам открыт бесплатный доступ уровня Starter на 3 дня. Нажмите кнопку ниже, чтобы начать.\n\n"
-            f"{support}"
-        )
+    lang = user.language
+    if message.from_user.first_name:
+        name = message.from_user.first_name
+    elif message.from_user.username:
+        name = f"@{message.from_user.username}"
     else:
-        text = (
-            f"С возвращением, {name}! 👋\n\n"
-            f"Напомню, что доступно:\n\n{features}\n\n"
-            f"Откройте приложение, чтобы продолжить.\n\n"
-            f"{support}"
-        )
+        name = t(lang, "friend_fallback")
+    features = t(lang, "features")
+    support = t(lang, "support_contact")
 
-    await message.answer(text, reply_markup=_webapp_keyboard())
+    key = "welcome_new" if is_new else "welcome_back"
+    text = t(lang, key, name=name, features=features, support=support)
+
+    await message.answer(text, reply_markup=_webapp_keyboard(lang))
 
 
 @router.message(Command("app"))
 async def cmd_app(message: Message) -> None:
-    await message.answer("Открыть приложение:", reply_markup=_webapp_keyboard())
+    async with async_session() as db:
+        user = await get_user_by_telegram_id(db, message.from_user.id)
+    lang = user.language if user else None
+    await message.answer(t(lang, "open_app_prompt"), reply_markup=_webapp_keyboard(lang))
 
 
 @router.message(Command("help"))
 async def cmd_help(message: Message) -> None:
-    await message.answer(HELP_TEXT)
+    async with async_session() as db:
+        user = await get_user_by_telegram_id(db, message.from_user.id)
+    await message.answer(t(user.language if user else None, "help"))
 
 
 @router.message(Command("stats"))
 async def cmd_stats(message: Message) -> None:
     async with async_session() as db:
-        result = await db.execute(select(User).where(User.telegram_user_id == message.from_user.id))
-        user = result.scalar_one_or_none()
+        user = await get_user_by_telegram_id(db, message.from_user.id)
 
     if user is None:
-        await message.answer("Вы ещё не зарегистрированы. Отправьте /start, чтобы начать.")
+        await message.answer(t(None, "not_registered"))
         return
 
     expires = user.subscription_expires_at.strftime("%d.%m.%Y") if user.subscription_expires_at else "—"
-    text = (
-        f"<b>Тариф:</b> {user.subscription_tier.value}\n"
-        f"<b>Действует до:</b> {expires}\n"
-        f"<b>Запросов сегодня:</b> {user.requests_today}\n"
-        f"<b>Запросов за месяц:</b> {user.requests_month}"
+    text = t(
+        user.language,
+        "stats",
+        tier=user.subscription_tier.value,
+        expires=expires,
+        today=user.requests_today,
+        month=user.requests_month,
     )
     await message.answer(text)
 
@@ -114,53 +99,60 @@ async def cmd_stats(message: Message) -> None:
 @router.message(Command("invite"))
 async def cmd_invite(message: Message) -> None:
     async with async_session() as db:
-        result = await db.execute(select(User).where(User.telegram_user_id == message.from_user.id))
-        user = result.scalar_one_or_none()
+        user = await get_user_by_telegram_id(db, message.from_user.id)
 
         if user is None:
-            await message.answer("Вы ещё не зарегистрированы. Отправьте /start, чтобы начать.")
+            await message.answer(t(None, "not_registered"))
             return
 
         qualified = await count_qualified_referrals(db, user.id)
 
+    lang = user.language
     link = referral_link(user.telegram_user_id)
     next_milestone = next((m for m in MILESTONES if m.referrals_required > qualified), None)
     progress = (
-        f"До следующего бонуса ({next_milestone.label}): "
-        f"{qualified}/{next_milestone.referrals_required} друзей оформили подписку."
+        t(lang, "invite_progress_next", label=next_milestone.label[lang], qualified=qualified, required=next_milestone.referrals_required)
         if next_milestone
-        else f"Вы получили все текущие бонусы за рефералов! Друзей с подпиской: {qualified}."
+        else t(lang, "invite_progress_done", qualified=qualified)
+    )
+
+    milestone_lines = "\n".join(
+        t(lang, "invite_milestone_line", count=m.referrals_required, label=m.label[lang]) for m in MILESTONES
     )
 
     text = (
-        "🎁 <b>Приглашайте друзей — получайте бонусный доступ</b>\n\n"
-        "Когда друг перейдёт по вашей ссылке и оформит любую платную подписку — "
-        "вы получите бонусные дни расширенного тарифа.\n\n"
-        + "\n".join(f"{m.referrals_required} друг(ей) с подпиской — {m.label}" for m in MILESTONES)
-        + f"\n\n{progress}\n\n"
-        f"Ваша ссылка:\n<code>{link}</code>"
+        f"{t(lang, 'invite_intro')}\n\n"
+        f"{milestone_lines}\n\n"
+        f"{progress}\n\n"
+        f"{t(lang, 'invite_link_label')}\n<code>{link}</code>"
     )
     await message.answer(text)
 
 
 @router.message(Command("support"))
 async def cmd_support(message: Message, command: CommandObject, bot: Bot) -> None:
+    async with async_session() as db:
+        user = await get_user_by_telegram_id(db, message.from_user.id)
+    lang = user.language if user else None
+
     if not command.args:
-        await message.answer("Опишите проблему в формате: /support ваш вопрос")
+        await message.answer(t(lang, "support_usage"))
         return
 
     if not settings.telegram_admin_chat_id:
-        await message.answer("Спасибо! Поддержка получит ваше сообщение в ближайшее время.")
+        await message.answer(t(lang, "support_thanks_pending"))
         return
 
-    user = message.from_user
+    from_user = message.from_user
     await bot.send_message(
         settings.telegram_admin_chat_id,
-        f"📩 Обращение от @{user.username or user.id} (id={user.id}):\n\n{command.args}",
+        f"📩 Обращение от @{from_user.username or from_user.id} (id={from_user.id}):\n\n{command.args}",
     )
-    await message.answer("Спасибо! Ваше сообщение передано в поддержку.")
+    await message.answer(t(lang, "support_thanks_sent"))
 
 
 @router.message(F.text)
 async def fallback(message: Message) -> None:
-    await message.answer("Не понял команду. Напишите /help, чтобы увидеть список доступных команд.")
+    async with async_session() as db:
+        user = await get_user_by_telegram_id(db, message.from_user.id)
+    await message.answer(t(user.language if user else None, "fallback"))

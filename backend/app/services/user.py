@@ -8,6 +8,11 @@ from app.models.user import SubscriptionTier, User
 TRIAL_DAYS = 3
 
 
+async def get_user_by_telegram_id(db: AsyncSession, telegram_user_id: int) -> User | None:
+    result = await db.execute(select(User).where(User.telegram_user_id == telegram_user_id))
+    return result.scalar_one_or_none()
+
+
 async def get_or_create_user(
     db: AsyncSession,
     telegram_user_id: int,

@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import axios from 'axios'
 import { api } from '../lib/api'
 import { haptic } from '../lib/haptics'
+import { translate } from '../lib/i18n'
+import { useUserStore } from '../store/userStore'
 
 export const TEXT_MODELS = [
   { id: 'claude', label: 'Claude Sonnet 5', endpoint: '/api/text/claude' },
@@ -40,11 +42,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set((s) => ({ messages: [...s.messages, { role: 'assistant', content: reply }], pending: false }))
       haptic('success')
     } catch (err) {
-      let error = 'Не удалось отправить запрос. Проверьте, что backend запущен.'
+      const lang = useUserStore.getState().language
+      let error = translate(lang, 'error.generic')
       if (axios.isAxiosError(err) && err.response?.status === 403) {
-        error = 'Текст доступен с тарифа Starter — оформите подписку в профиле.'
+        error = translate(lang, 'error.textTierRequired')
       } else if (axios.isAxiosError(err) && err.response?.status === 429) {
-        error = 'Дневной лимит запросов исчерпан. Лимит обновится завтра или повысьте тариф.'
+        error = translate(lang, 'error.dailyLimit')
       } else if (axios.isAxiosError(err) && err.response?.data?.detail) {
         error = err.response.data.detail
       }
