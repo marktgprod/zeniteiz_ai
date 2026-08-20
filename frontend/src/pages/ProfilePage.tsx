@@ -40,28 +40,32 @@ interface Loyalty {
 const TIERS: {
   id: SubscriptionTier
   name: string
-  price: string
+  priceAmount: number
+  pricePeriod: 'month' | 'year'
   tributeLink: string
   featureKeys: string[]
 }[] = [
   {
     id: 'STARTER',
     name: 'Starter',
-    price: '3 €/мес',
+    priceAmount: 3,
+    pricePeriod: 'month',
     tributeLink: 'https://t.me/tribute/app?startapp=s13MQ',
     featureKeys: ['tier.starter.feature1', 'tier.starter.feature2', 'tier.starter.feature3', 'tier.starter.feature4'],
   },
   {
     id: 'PRO',
     name: 'Pro',
-    price: '8 €/мес',
+    priceAmount: 8,
+    pricePeriod: 'month',
     tributeLink: 'https://t.me/tribute/app?startapp=s13MR',
     featureKeys: ['tier.pro.feature1', 'tier.pro.feature2', 'tier.pro.feature3', 'tier.pro.feature4'],
   },
   {
     id: 'VIP',
     name: 'VIP',
-    price: '40 €/год',
+    priceAmount: 40,
+    pricePeriod: 'year',
     tributeLink: 'https://t.me/tribute/app?startapp=s13N2',
     featureKeys: ['tier.vip.feature1', 'tier.vip.feature2', 'tier.vip.feature3', 'tier.vip.feature4'],
   },
@@ -273,7 +277,7 @@ export default function ProfilePage() {
               <div className="flex items-baseline justify-between">
                 <h2 className="font-semibold">{tier.name}</h2>
                 <span className={`text-sm ${isVip ? 'text-white/70 dark:text-black/60' : 'text-gray-500 dark:text-gray-400'}`}>
-                  {tier.price}
+                  {t(tier.pricePeriod === 'year' ? 'profile.price.year' : 'profile.price.month', { amount: tier.priceAmount })}
                 </span>
               </div>
               <ul className="mt-3 space-y-1.5 text-sm">

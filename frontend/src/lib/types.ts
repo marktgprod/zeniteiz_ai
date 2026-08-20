@@ -17,10 +17,3 @@ export interface NewsItem {
   published_at: string
 }
 
-export const CATEGORY_LABELS: Record<string, string> = {
-  business: 'Бизнес',
-  code: 'Код',
-  marketing: 'Маркетинг',
-  design: 'Дизайн',
-  content: 'Контент',
-}

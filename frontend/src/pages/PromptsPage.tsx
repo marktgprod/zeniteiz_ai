@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Check, Copy, Search, SearchX } from 'lucide-react'
 import { api } from '../lib/api'
-import { CATEGORY_LABELS, type Prompt } from '../lib/types'
+import type { Prompt } from '../lib/types'
 import { Card, CardSkeleton, inputClasses, Notice, PageHeader } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
@@ -77,7 +77,7 @@ export default function PromptsPage() {
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
             }`}
           >
-            {CATEGORY_LABELS[c] ?? c}
+            {t(`category.${c}`)}
           </button>
         ))}
       </div>
@@ -96,7 +96,7 @@ export default function PromptsPage() {
             <div className="flex items-start justify-between gap-2">
               <h2 className="font-semibold">{prompt.title}</h2>
               <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500 dark:bg-white/5 dark:text-gray-400">
-                {CATEGORY_LABELS[prompt.category] ?? prompt.category}
+                {t(`category.${prompt.category}`)}
               </span>
             </div>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{prompt.description}</p>
