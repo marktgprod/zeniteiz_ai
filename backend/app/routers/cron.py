@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
 
 from aiogram.exceptions import TelegramAPIError
+from aiogram.types import BotCommand
 from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.bot.dispatcher import create_bot
+from app.bot.handlers import BOT_COMMANDS
 from app.bot.notify import run_notification_check
 from app.config import settings
 from app.db import get_db
@@ -57,6 +59,24 @@ async def cron_reset_limits(authorization: str = Header(default=""), db: AsyncSe
         monthly_reset = await reset_monthly_requests(db)
 
     return {"ok": True, "daily_reset": daily_reset, "monthly_reset": monthly_reset}
+
+
+@router.get("/api/cron/set-commands")
+async def set_commands(authorization: str = Header(default="")) -> dict:
+    """(Re-)register the bot's Telegram command menu. Call once after adding/
+    changing a command in BOT_COMMANDS — Telegram doesn't pick these up on its
+    own from the code, only from an explicit setMyCommands call."""
+    _check_auth(authorization)
+
+    bot = create_bot()
+    try:
+        try:
+            await bot.set_my_commands([BotCommand(command=cmd, description=desc) for cmd, desc in BOT_COMMANDS])
+        except TelegramAPIError as exc:
+            raise HTTPException(status_code=502, detail=f"Telegram API unavailable: {exc}") from exc
+        return {"ok": True, "commands": [cmd for cmd, _ in BOT_COMMANDS]}
+    finally:
+        await bot.session.close()
 
 
 @router.get("/api/cron/set-webhook")

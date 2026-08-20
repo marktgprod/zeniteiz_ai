@@ -11,6 +11,18 @@ from app.services.user import get_or_create_user
 
 router = Router()
 
+# Single source of truth for the Telegram command menu — registered via
+# bot.set_my_commands() (see /api/cron/set-commands), not automatic, so a
+# newly added command here still needs that endpoint hit once after deploy.
+BOT_COMMANDS: list[tuple[str, str]] = [
+    ("start", "Начать / открыть меню"),
+    ("app", "Открыть приложение"),
+    ("stats", "Моя статистика и подписка"),
+    ("invite", "Пригласить друзей и получить подарок"),
+    ("support", "Написать в поддержку"),
+    ("help", "Список всех команд"),
+]
+
 HELP_TEXT = (
     "<b>Доступные команды</b>\n\n"
     "/app — открыть приложение\n"
