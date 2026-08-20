@@ -1,6 +1,6 @@
 import type { Language } from '../store/userStore'
 
-export type EarnMode = 'text' | 'image'
+export type EarnMode = 'text' | 'image' | 'video'
 
 type L = Record<Language, string>
 
@@ -25,6 +25,21 @@ export interface NicheGuide {
   description: L
   price: L
   platforms: string[]
+}
+
+export interface QuizOption {
+  text: L
+  correct: boolean
+}
+
+export interface CourseLesson {
+  id: string
+  title: L
+  body: L
+  quizQuestion: L
+  quizOptions: QuizOption[]
+  tryPrompt?: L
+  tryMode?: EarnMode
 }
 
 export interface MarathonDay {
@@ -246,7 +261,7 @@ export const MARATHON_DAYS: MarathonDay[] = [
       ru: 'Короткое видео: чашка кофе на деревянном столе, утренний свет, атмосферно',
       en: 'Short video: a cup of coffee on a wooden table, morning light, atmospheric',
     },
-    mode: 'image',
+    mode: 'video',
   },
   {
     day: 6,
@@ -268,5 +283,122 @@ export const MARATHON_DAYS: MarathonDay[] = [
       en: 'Help me plan how to promote my services next week, based on what I made over the past 7 days: [describe what you made]',
     },
     mode: 'text',
+  },
+]
+
+export const COURSE_LESSONS: CourseLesson[] = [
+  {
+    id: 'what-is-ai',
+    title: { ru: 'Что такое ИИ-модели', en: 'What AI models actually are' },
+    body: {
+      ru: 'Большая языковая модель (LLM), такая как Claude или GPT-4o, не «ищет» ответ в интернете и не хранит готовые фразы — она предсказывает наиболее вероятное продолжение текста на основе того, чему научилась на огромном объёме данных. Модели для изображений и видео (Flux, MiniMax) работают похоже, но предсказывают пиксели, а не слова. Понимание этого помогает писать промпты: чем точнее и конкретнее вход — тем точнее выход.',
+      en: "A large language model (LLM) like Claude or GPT-4o doesn't \"search\" the internet or store canned answers — it predicts the most likely continuation of text based on patterns learned from huge amounts of data. Image and video models (Flux, MiniMax) work similarly, but predict pixels instead of words. Understanding this helps you write better prompts: the more precise the input, the more precise the output.",
+    },
+    quizQuestion: { ru: 'Что делает большая языковая модель (LLM)?', en: 'What does a large language model (LLM) do?' },
+    quizOptions: [
+      { text: { ru: 'Ищет готовый ответ в интернете в реальном времени', en: 'Searches the internet for a ready answer in real time' }, correct: false },
+      { text: { ru: 'Предсказывает наиболее вероятное продолжение текста', en: 'Predicts the most likely continuation of the text' }, correct: true },
+      { text: { ru: 'Хранит базу заранее написанных ответов', en: 'Stores a database of pre-written answers' }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Объясни простыми словами, что такое большая языковая модель (LLM), с одной аналогией из жизни',
+      en: 'Explain in simple terms what a large language model (LLM) is, using one everyday analogy',
+    },
+    tryMode: 'text',
+  },
+  {
+    id: 'prompting-basics',
+    title: { ru: 'Основы промптинга', en: 'Prompting basics' },
+    body: {
+      ru: 'Хороший промпт обычно включает: роль («ты — опытный копирайтер»), контекст (для кого и зачем), формат (сколько вариантов, длина, стиль) и, если важно, пример. Плохой промпт — это одно слово или общая фраза без деталей. Чем конкретнее задача, тем меньше правок потребуется.',
+      en: 'A good prompt usually includes: a role ("you are an experienced copywriter"), context (who it\'s for and why), format (how many variants, length, style), and an example if it matters. A bad prompt is a single vague word with no details. The more specific the task, the fewer edits you\'ll need afterward.',
+    },
+    quizQuestion: { ru: 'Какой промпт даст более предсказуемый результат?', en: 'Which prompt gives a more predictable result?' },
+    quizOptions: [
+      { text: { ru: '«Напиши текст»', en: '"Write some text"' }, correct: false },
+      { text: { ru: 'Промпт с ролью, контекстом и форматом ответа', en: 'A prompt with a role, context, and response format' }, correct: true },
+      { text: { ru: 'Промпт, написанный капсом', en: 'A prompt written in all caps' }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Ты — опытный копирайтер. Напиши 3 варианта заголовка для рекламного поста кофейни, тон дружелюбный, до 60 символов каждый',
+      en: 'You are an experienced copywriter. Write 3 headline variants for a coffee shop ad post, friendly tone, under 60 characters each',
+    },
+    tryMode: 'text',
+  },
+  {
+    id: 'text-models',
+    title: { ru: 'Claude vs GPT-4o mini — что выбрать', en: 'Claude vs GPT-4o mini — which to pick' },
+    body: {
+      ru: 'GPT-4o mini быстрее и дешевле — хорош для коротких задач: пост, описание, короткое письмо. Claude Sonnet сильнее в сложных рассуждениях, анализе и длинных структурированных текстах — коммерческие предложения, разбор стратегии, код. Правило: для быстрой рутины — GPT-4o mini, для задач, где важна глубина — Claude.',
+      en: "GPT-4o mini is faster and cheaper — good for short tasks: a post, a description, a short message. Claude Sonnet is stronger at complex reasoning, analysis, and long structured text — proposals, strategy breakdowns, code. Rule of thumb: quick routine work → GPT-4o mini, tasks that need depth → Claude.",
+    },
+    quizQuestion: { ru: 'Когда стоит выбрать более мощную модель (Claude)?', en: 'When should you pick the more powerful model (Claude)?' },
+    quizOptions: [
+      { text: { ru: 'Для сложного анализа и длинных структурированных текстов', en: 'For complex analysis and long structured text' }, correct: true },
+      { text: { ru: 'Только для сообщений короче 10 слов', en: 'Only for messages shorter than 10 words' }, correct: false },
+      { text: { ru: 'Разницы нет, модели всегда взаимозаменяемы', en: "It doesn't matter, the models are always interchangeable" }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Сравни фриланс и работу по найму для новичка в ИИ-услугах — дай структурированный ответ с плюсами, минусами и рекомендацией',
+      en: 'Compare freelancing vs. a full-time job for someone starting out with AI services — give a structured answer with pros, cons, and a recommendation',
+    },
+    tryMode: 'text',
+  },
+  {
+    id: 'image-models',
+    title: { ru: 'Генерация изображений', en: 'Image generation' },
+    body: {
+      ru: 'Для предсказуемого результата опишите: стиль (минимализм, реализм, флэт), композицию (крупный план, вид сверху), освещение, цвета и то, чего быть не должно. Короткие абстрактные промпты («красивое лого») дают случайный результат — детали решают.',
+      en: "For a predictable result, describe: style (minimalist, realistic, flat), composition (close-up, top-down), lighting, colors, and what should be avoided. Short abstract prompts (\"a nice logo\") give random results — details are what make it work.",
+    },
+    quizQuestion: { ru: 'Что стоит указать в промпте для изображения?', en: 'What should you specify in an image prompt?' },
+    quizOptions: [
+      { text: { ru: 'Стиль, композицию, освещение и детали', en: 'Style, composition, lighting, and details' }, correct: true },
+      { text: { ru: 'Только одно слово', en: 'Just one word' }, correct: false },
+      { text: { ru: 'Ничего — ИИ сам всё придумает как надо', en: "Nothing — the AI will figure it out on its own" }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Логотип для кофейни в стиле минимализм, тёплые тона, плоская векторная графика, белый фон',
+      en: 'Logo for a coffee shop, minimalist style, warm tones, flat vector graphics, white background',
+    },
+    tryMode: 'image',
+  },
+  {
+    id: 'video-models',
+    title: { ru: 'Генерация видео', en: 'Video generation' },
+    body: {
+      ru: 'Видео-модели лучше всего работают с чётким описанием одной сцены: что происходит, какое движение камеры или объекта, какое настроение. Пока не стоит ожидать сложных сюжетов с несколькими сценами за один запрос — короткие атмосферные ролики получаются лучше всего.',
+      en: 'Video models work best with a clear description of a single scene: what happens, what camera or object movement, what mood. Don\'t expect complex multi-scene stories from one request yet — short atmospheric clips work best.',
+    },
+    quizQuestion: { ru: 'Какой промпт для видео сработает лучше?', en: 'Which video prompt works better?' },
+    quizOptions: [
+      { text: { ru: 'Чёткое описание одной сцены, движения и настроения', en: 'A clear description of one scene, movement, and mood' }, correct: true },
+      { text: { ru: 'Одно абстрактное слово', en: 'A single abstract word' }, correct: false },
+      { text: { ru: 'Ссылка на чужое видео', en: "A link to someone else's video" }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Короткое видео: чашка кофе на деревянном столе, лёгкий пар, утренний свет, камера медленно приближается',
+      en: 'Short video: a cup of coffee on a wooden table, light steam, morning light, camera slowly zooming in',
+    },
+    tryMode: 'video',
+  },
+  {
+    id: 'putting-it-together',
+    title: { ru: 'От идеи до результата', en: 'From idea to result' },
+    body: {
+      ru: 'Реальная задача клиента редко решается одним запросом: текст для соцсетей + лого + короткое видео вместе создают целостную подачу. Освоив промптинг во всех трёх режимах, вы готовы применять это на практике — загляните в «Тулкит» за готовыми промптами под конкретные услуги или начните «Марафон», чтобы пройти путь от первого текста до первого объявления за 7 дней.',
+      en: "A real client task is rarely solved with a single request: social copy + a logo + a short video together make a complete package. Once you're comfortable prompting in all three modes, you're ready to put it into practice — check the Toolkit for ready-made prompts for specific services, or start the Marathon to go from your first text to your first paid listing in 7 days.",
+    },
+    quizQuestion: { ru: 'Какой логичный следующий шаг после этого урока?', en: 'What is the logical next step after this lesson?' },
+    quizOptions: [
+      { text: { ru: 'Применить промптинг на реальной задаче из Тулкита или Марафона', en: 'Apply prompting to a real task from the Toolkit or Marathon' }, correct: true },
+      { text: { ru: 'Больше ничего не делать, этого достаточно', en: "Do nothing else, this is enough" }, correct: false },
+      { text: { ru: 'Забыть всё и начать заново с нуля', en: 'Forget everything and start over from scratch' }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Помоги составить план: как применить ИИ для заработка на основе моих навыков: [опишите свои навыки]',
+      en: 'Help me build a plan: how to use AI to earn money based on my skills: [describe your skills]',
+    },
+    tryMode: 'text',
   },
 ]

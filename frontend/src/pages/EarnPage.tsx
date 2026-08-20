@@ -1,19 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Check, Lock, Rocket } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown, Lock, Rocket } from 'lucide-react'
 import { api } from '../lib/api'
 import { Card, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
-import { CASE_STUDIES, MARATHON_DAYS, NICHE_GUIDES, TOOLKIT_PROMPTS, type EarnMode } from '../lib/earnContent'
+import { getCompletedLessons, markLessonComplete } from '../lib/courseProgress'
+import {
+  CASE_STUDIES,
+  COURSE_LESSONS,
+  MARATHON_DAYS,
+  NICHE_GUIDES,
+  TOOLKIT_PROMPTS,
+  type CourseLesson,
+  type EarnMode,
+} from '../lib/earnContent'
 import { useT } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 
-type Tab = 'cases' | 'toolkit' | 'guide' | 'marathon'
+type Tab = 'cases' | 'course' | 'toolkit' | 'guide' | 'marathon'
 
 export default function EarnPage() {
   const [tab, setTab] = useState<Tab>('cases')
   const [marathon, setMarathon] = useState<{ started: boolean; currentDay: number } | null>(null)
+  const [expandedLesson, setExpandedLesson] = useState<string | null>(null)
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set())
+  const [chosenOption, setChosenOption] = useState<Record<string, number>>({})
   const navigate = useNavigate()
   const userId = useUserStore((s) => s.id)
   const lang = useUserStore((s) => s.language)
@@ -26,6 +38,10 @@ export default function EarnPage() {
       .then((res) => setMarathon({ started: res.data.started, currentDay: res.data.current_day }))
       .catch(() => {})
   }, [userId, tab])
+
+  useEffect(() => {
+    setCompletedLessons(getCompletedLessons())
+  }, [])
 
   const handleTry = (mode: EarnMode, prompt: string, id: string) => {
     haptic('light')
@@ -41,6 +57,15 @@ export default function EarnPage() {
     setMarathon({ started: true, currentDay: res.data.current_day })
   }
 
+  const handleAnswer = (lesson: CourseLesson, optionIndex: number) => {
+    haptic('light')
+    setChosenOption((s) => ({ ...s, [lesson.id]: optionIndex }))
+    if (lesson.quizOptions[optionIndex].correct) {
+      haptic('success')
+      setCompletedLessons(markLessonComplete(lesson.id))
+    }
+  }
+
   return (
     <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
       <PageHeader title={t('earn.title')} />
@@ -49,6 +74,7 @@ export default function EarnPage() {
       <SegmentedTabs
         options={[
           { id: 'cases', label: t('earn.tabs.cases') },
+          { id: 'course', label: t('earn.tabs.course') },
           { id: 'toolkit', label: t('earn.tabs.toolkit') },
           { id: 'guide', label: t('earn.tabs.guide') },
           { id: 'marathon', label: t('earn.tabs.marathon') },
@@ -68,6 +94,103 @@ export default function EarnPage() {
               </span>
             </Card>
           ))}
+
+        {tab === 'course' && (
+          <div className="lg:col-span-2">
+            <div className="mb-1.5 flex items-center justify-between text-sm">
+              <span className="font-medium">
+                {t('earn.course.progress', { done: completedLessons.size, total: COURSE_LESSONS.length })}
+              </span>
+            </div>
+            <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+              <div
+                className="h-full rounded-full bg-black transition-all dark:bg-white"
+                style={{ width: `${(completedLessons.size / COURSE_LESSONS.length) * 100}%` }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              {COURSE_LESSONS.map((lesson, i) => {
+                const isOpen = expandedLesson === lesson.id
+                const isDone = completedLessons.has(lesson.id)
+                const chosen = chosenOption[lesson.id]
+                const chosenIsCorrect = chosen !== undefined && lesson.quizOptions[chosen].correct
+
+                return (
+                  <Card key={lesson.id} className="text-left">
+                    <button
+                      onClick={() => {
+                        haptic('light')
+                        setExpandedLesson(isOpen ? null : lesson.id)
+                      }}
+                      className="flex w-full items-center justify-between gap-2 text-left"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <span
+                          className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            isDone
+                              ? 'bg-black text-white dark:bg-white dark:text-black'
+                              : 'bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+                          }`}
+                        >
+                          {isDone ? <Check size={12} /> : i + 1}
+                        </span>
+                        <span className="font-semibold">{lesson.title[lang]}</span>
+                      </span>
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {isOpen && (
+                      <div className="mt-3 space-y-3">
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{lesson.body[lang]}</p>
+
+                        <div>
+                          <p className="text-sm font-medium">{lesson.quizQuestion[lang]}</p>
+                          <div className="mt-2 space-y-1.5">
+                            {lesson.quizOptions.map((opt, oi) => {
+                              const isChosen = chosen === oi
+                              return (
+                                <button
+                                  key={oi}
+                                  onClick={() => handleAnswer(lesson, oi)}
+                                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                                    isChosen && opt.correct
+                                      ? 'border-emerald-400 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10'
+                                      : isChosen && !opt.correct
+                                        ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10'
+                                        : 'border-gray-200 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/[0.03]'
+                                  }`}
+                                >
+                                  {opt.text[lang]}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          {chosen !== undefined && !chosenIsCorrect && (
+                            <p className="mt-1.5 text-xs text-red-500">{t('earn.course.tryAgain')}</p>
+                          )}
+                        </div>
+
+                        {lesson.tryPrompt && lesson.tryMode && (
+                          <button
+                            onClick={() => handleTry(lesson.tryMode!, lesson.tryPrompt![lang], `course-${lesson.id}`)}
+                            className="flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-85 dark:bg-white dark:text-black"
+                          >
+                            {t('earn.toolkit.try')}
+                            <ArrowRight size={13} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {tab === 'toolkit' &&
           TOOLKIT_PROMPTS.map((p) => (
