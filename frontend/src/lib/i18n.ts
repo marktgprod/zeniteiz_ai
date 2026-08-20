@@ -6,6 +6,8 @@ type Dict = Record<string, string>
 export const translations: Record<Language, Dict> = {
   ru: {
     'nav.home': 'Главная',
+    'nav.ai': 'ИИ',
+    'nav.earn': 'Заработок',
     'nav.text': 'Текст',
     'nav.images': 'Фото',
     'nav.video': 'Видео',
@@ -24,6 +26,7 @@ export const translations: Record<Language, Dict> = {
     'home.images.hint': 'Flux.1 Pro',
     'home.video.hint': 'MiniMax Video-01',
     'home.prompts.hint': 'Библиотека запросов',
+    'home.earn.hint': 'Идеи и промпты для заработка',
 
     'error.openViaBot': 'Откройте приложение через Telegram-бота, чтобы отправлять запросы.',
     'error.textTierRequired': 'Текст доступен с тарифа Starter — оформите подписку в профиле.',
@@ -97,6 +100,18 @@ export const translations: Record<Language, Dict> = {
     'tier.vip.feature3': 'Безлимитные запросы',
     'tier.vip.feature4': 'Личный чат с разработчиком',
 
+    'earn.title': 'Заработок на ИИ',
+    'earn.subtitle': 'Идеи, готовые промпты и гид по нишам для тех, кто хочет зарабатывать с помощью ИИ',
+    'earn.tabs.cases': 'Кейсы',
+    'earn.tabs.toolkit': 'Тулкит',
+    'earn.tabs.guide': 'Гид',
+    'earn.tabs.marathon': 'Марафон',
+    'earn.toolkit.try': 'Попробовать',
+    'earn.marathon.introTitle': '7-дневный марафон заработка на ИИ',
+    'earn.marathon.introBody': 'Каждый день — новое небольшое задание с готовым промптом: от первого рекламного текста до первого объявления с услугой. Через неделю у вас будет мини-портфолио и план продвижения.',
+    'earn.marathon.start': 'Начать марафон',
+    'earn.marathon.day': 'День {n}',
+
     'prompts.title': 'Промпты',
     'prompts.search': 'Поиск по промптам...',
     'prompts.all': 'Все',
@@ -133,6 +148,8 @@ export const translations: Record<Language, Dict> = {
   },
   en: {
     'nav.home': 'Home',
+    'nav.ai': 'AI',
+    'nav.earn': 'Earn',
     'nav.text': 'Text',
     'nav.images': 'Photos',
     'nav.video': 'Video',
@@ -151,6 +168,7 @@ export const translations: Record<Language, Dict> = {
     'home.images.hint': 'Flux.1 Pro',
     'home.video.hint': 'MiniMax Video-01',
     'home.prompts.hint': 'Prompt library',
+    'home.earn.hint': 'Ideas and prompts to earn money',
 
     'error.openViaBot': 'Open the app through the Telegram bot to send requests.',
     'error.textTierRequired': 'Text is available from the Starter plan — subscribe in your profile.',
@@ -223,6 +241,18 @@ export const translations: Record<Language, Dict> = {
     'tier.vip.feature2': 'MiniMax Video-01 (video)',
     'tier.vip.feature3': 'Unlimited requests',
     'tier.vip.feature4': "Direct chat with the developer",
+
+    'earn.title': 'Earn with AI',
+    'earn.subtitle': 'Ideas, ready-made prompts, and a niche guide for anyone who wants to make money with AI',
+    'earn.tabs.cases': 'Cases',
+    'earn.tabs.toolkit': 'Toolkit',
+    'earn.tabs.guide': 'Guide',
+    'earn.tabs.marathon': 'Marathon',
+    'earn.toolkit.try': 'Try it',
+    'earn.marathon.introTitle': '7-day AI earnings marathon',
+    'earn.marathon.introBody': "Every day unlocks a small task with a ready-made prompt — from your first ad copy to your first paid listing. In a week you'll have a mini-portfolio and a promotion plan.",
+    'earn.marathon.start': 'Start the marathon',
+    'earn.marathon.day': 'Day {n}',
 
     'prompts.title': 'Prompts',
     'prompts.search': 'Search prompts...',

@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom'
-import { MessageSquare, Image, Video, Sparkles, ArrowRight } from 'lucide-react'
+import { MessageSquare, Image, Video, Sparkles, TrendingUp, ArrowRight } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
 import { isRunningInTelegram } from '../lib/telegram'
 import { useT } from '../lib/i18n'
 
 const QUICK_ACTIONS = [
-  { to: '/text', labelKey: 'nav.text', hintKey: 'home.text.hint', icon: MessageSquare },
-  { to: '/images', labelKey: 'nav.images', hintKey: 'home.images.hint', icon: Image },
-  { to: '/video', labelKey: 'nav.video', hintKey: 'home.video.hint', icon: Video },
-  { to: '/prompts', labelKey: 'nav.prompts', hintKey: 'home.prompts.hint', icon: Sparkles },
+  { to: '/ai', state: { mode: 'text' }, labelKey: 'nav.text', hintKey: 'home.text.hint', icon: MessageSquare },
+  { to: '/ai', state: { mode: 'image' }, labelKey: 'nav.images', hintKey: 'home.images.hint', icon: Image },
+  { to: '/ai', state: { mode: 'video' }, labelKey: 'nav.video', hintKey: 'home.video.hint', icon: Video },
+  { to: '/earn', state: undefined, labelKey: 'nav.earn', hintKey: 'home.earn.hint', icon: TrendingUp },
+  { to: '/prompts', state: undefined, labelKey: 'nav.prompts', hintKey: 'home.prompts.hint', icon: Sparkles },
 ]
 
 export default function Home() {
@@ -33,12 +34,13 @@ export default function Home() {
 
       <h2 className="mt-6 mb-3 text-sm font-semibold text-gray-500 dark:text-gray-400">{t('home.quickActions')}</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {QUICK_ACTIONS.map((action) => {
+        {QUICK_ACTIONS.map((action, i) => {
           const Icon = action.icon
           return (
             <Link
-              key={action.to}
+              key={i}
               to={action.to}
+              state={action.state}
               className="group rounded-2xl border border-gray-200 bg-white p-4 text-left shadow-sm transition-all hover:border-gray-400 hover:shadow-md dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-white/30"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white">

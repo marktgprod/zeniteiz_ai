@@ -59,5 +59,12 @@ class User(Base):
     # proactively from cron/webhooks, not in response to a live request).
     language: Mapped[str] = mapped_column(String, default="ru")
 
+    # "Earn with AI" 7-day marathon (Заработок → Марафон). A new day unlocks
+    # automatically once 24h have passed since marathon_started_at — no
+    # separate per-day completion state. marathon_last_notified_day guards
+    # the daily cron against re-sending the same day's unlock message.
+    marathon_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    marathon_last_notified_day: Mapped[int] = mapped_column(Integer, default=0)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_active: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

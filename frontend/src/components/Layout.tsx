@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Home, MessageSquare, Image, Video, Sparkles, Newspaper, Users, User } from 'lucide-react'
+import { Home, Bot, TrendingUp, Sparkles, Newspaper, Users, User } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
 import { useVideoStore } from '../store/videoStore'
 import { useChatStore } from '../store/chatStore'
@@ -11,9 +11,8 @@ import { useT, setLanguage } from '../lib/i18n'
 
 const NAV_ITEMS = [
   { to: '/', labelKey: 'nav.home', end: true, icon: Home },
-  { to: '/text', labelKey: 'nav.text', icon: MessageSquare },
-  { to: '/images', labelKey: 'nav.images', icon: Image },
-  { to: '/video', labelKey: 'nav.video', icon: Video },
+  { to: '/ai', labelKey: 'nav.ai', icon: Bot },
+  { to: '/earn', labelKey: 'nav.earn', icon: TrendingUp },
   { to: '/prompts', labelKey: 'nav.prompts', icon: Sparkles },
   { to: '/news', labelKey: 'nav.news', icon: Newspaper },
   { to: '/community', labelKey: 'nav.community', icon: Users },
@@ -57,9 +56,7 @@ export default function Layout() {
   const imagesPending = useImagesStore((s) => s.pending)
   const videoPending = useVideoStore((s) => s.status === 'pending')
   const pendingByPath: Record<string, boolean> = {
-    '/text': textPending,
-    '/images': imagesPending,
-    '/video': videoPending,
+    '/ai': textPending || imagesPending || videoPending,
   }
   const location = useLocation()
   const t = useT()

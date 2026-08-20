@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Download, ImageIcon, Wand2 } from 'lucide-react'
-import { inputClasses, Notice, PageHeader, PrimaryButton, SegmentedTabs } from '../components/ui'
+import { inputClasses, Notice, PrimaryButton, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { downloadFile } from '../lib/download'
@@ -8,10 +8,10 @@ import { useT } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 import { IMAGE_MODELS, useImagesStore } from '../store/imagesStore'
 
-export default function ImagesPage() {
+export default function ImagesPage({ initialPrompt }: { initialPrompt?: string }) {
   const userId = useUserStore((s) => s.id)
   const { model, images, pending, error, comingSoon, setModel, generate } = useImagesStore()
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt] = useState(initialPrompt ?? '')
   const t = useT()
 
   const handleGenerate = () => {
@@ -28,9 +28,7 @@ export default function ImagesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
-      <PageHeader title={t('images.title')} />
-
+    <div>
       {IMAGE_MODELS.length > 1 && (
         <SegmentedTabs
           options={IMAGE_MODELS.map((m) => ({ id: m.id, label: m.label }))}

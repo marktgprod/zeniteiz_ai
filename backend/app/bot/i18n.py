@@ -191,6 +191,10 @@ _MESSAGES: dict[str, dict[str, str]] = {
         "ru": "⚡️ Вы использовали {today}/{limit} запросов на сегодня. Апгрейдните тариф в /app, чтобы снять ограничение.",
         "en": "⚡️ You've used {today}/{limit} requests today. Upgrade your plan in /app to lift the limit.",
     },
+    "marathon_day_unlocked": {
+        "ru": "🔥 Марафон «Заработок на ИИ»: открыт день {day} — {title}.\n\nОткройте /app → Заработок → Марафон.",
+        "en": "🔥 «Earn with AI» marathon: day {day} is now unlocked — {title}.\n\nOpen /app → Earn → Marathon.",
+    },
 }
 
 

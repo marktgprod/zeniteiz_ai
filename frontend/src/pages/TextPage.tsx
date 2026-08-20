@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Paperclip, Send, Trash2, X } from 'lucide-react'
-import { Notice, PageHeader, SegmentedTabs } from '../components/ui'
+import { Notice, SegmentedTabs } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { fileToCompressedDataUrl } from '../lib/image'
@@ -10,10 +10,10 @@ import { TEXT_MODELS, useChatStore } from '../store/chatStore'
 
 const MAX_IMAGES = 4
 
-export default function TextPage() {
+export default function TextPage({ initialPrompt }: { initialPrompt?: string }) {
   const userId = useUserStore((s) => s.id)
   const { model, messages, pending, error, setModel, send, clear } = useChatStore()
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt] = useState(initialPrompt ?? '')
   const [images, setImages] = useState<string[]>([])
   const [uploadError, setUploadError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -61,28 +61,26 @@ export default function TextPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
-      <div className="flex items-center justify-between">
-        <PageHeader title={t('text.title')} />
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between gap-2">
+        <SegmentedTabs
+          options={TEXT_MODELS.map((m) => ({ id: m.id, label: m.label }))}
+          value={model}
+          onChange={(id) => setModel(id)}
+        />
         {messages.length > 0 && (
           <button
             onClick={() => {
               haptic('light')
               clear()
             }}
-            className="mb-4 flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
+            className="flex shrink-0 items-center gap-1 text-xs font-medium text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
           >
             <Trash2 size={13} />
             {t('text.clear')}
           </button>
         )}
       </div>
-
-      <SegmentedTabs
-        options={TEXT_MODELS.map((m) => ({ id: m.id, label: m.label }))}
-        value={model}
-        onChange={(id) => setModel(id)}
-      />
 
       <div
         ref={scrollRef}

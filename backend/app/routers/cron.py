@@ -11,6 +11,7 @@ from app.bot.notify import run_notification_check
 from app.config import settings
 from app.db import get_db
 from app.services.limits import reset_daily_requests, reset_monthly_requests
+from app.services.marathon import notify_marathon_progress
 from app.services.news_fetch import fetch_and_store_news
 from app.services.prompt_gen import generate_and_store_prompts
 
@@ -59,6 +60,19 @@ async def cron_reset_limits(authorization: str = Header(default=""), db: AsyncSe
         monthly_reset = await reset_monthly_requests(db)
 
     return {"ok": True, "daily_reset": daily_reset, "monthly_reset": monthly_reset}
+
+
+@router.get("/api/cron/marathon-notify")
+async def cron_marathon_notify(authorization: str = Header(default="")) -> dict:
+    _check_auth(authorization)
+
+    bot = create_bot()
+    try:
+        await notify_marathon_progress(bot)
+    finally:
+        await bot.session.close()
+
+    return {"ok": True}
 
 
 @router.get("/api/cron/set-commands")

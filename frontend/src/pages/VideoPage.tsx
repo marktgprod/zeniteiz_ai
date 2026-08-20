@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Clapperboard, Download } from 'lucide-react'
-import { inputClasses, Notice, PageHeader, PrimaryButton } from '../components/ui'
+import { inputClasses, Notice, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { downloadFile } from '../lib/download'
@@ -8,10 +8,10 @@ import { useT } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 import { useVideoStore } from '../store/videoStore'
 
-export default function VideoPage() {
+export default function VideoPage({ initialPrompt }: { initialPrompt?: string }) {
   const userId = useUserStore((s) => s.id)
   const { status, videoUrl, error, start } = useVideoStore()
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt] = useState(initialPrompt ?? '')
   const t = useT()
 
   const pending = status === 'pending'
@@ -30,15 +30,10 @@ export default function VideoPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-5 lg:max-w-3xl lg:px-8 lg:py-8">
-      <PageHeader
-        title={t('video.title')}
-        badge={
-          <span className="rounded-full bg-black px-2.5 py-0.5 text-[11px] font-semibold text-white dark:bg-white dark:text-black">
-            VIP
-          </span>
-        }
-      />
+    <div>
+      <span className="mb-3 inline-block rounded-full bg-black px-2.5 py-0.5 text-[11px] font-semibold text-white dark:bg-white dark:text-black">
+        VIP
+      </span>
 
       <textarea
         value={prompt}

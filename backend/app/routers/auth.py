@@ -7,9 +7,11 @@ from app.db import get_db
 from app.deps import get_current_telegram_user, get_user_or_404
 from app.models.user import User
 from app.schemas.loyalty import LevelOut, LoyaltyOut
+from app.schemas.marathon import MarathonOut
 from app.schemas.referral import ReferralOut
 from app.schemas.user import LanguageIn, SubscriptionOut, UserOut
 from app.services.loyalty import LEVELS, count_generations, has_active_reward, level_for_count, next_level
+from app.services.marathon import compute_current_day, start_marathon
 from app.services.referral import MILESTONES, count_qualified_referrals, referral_link
 from app.services.user import get_or_create_user
 
@@ -91,4 +93,25 @@ async def get_referrals(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) 
         gift_level=user.referral_gift_level,
         next_milestone_count=upcoming.referrals_required if upcoming else None,
         next_milestone_label=upcoming.label[user.language] if upcoming else None,
+    )
+
+
+@router.get("/api/user/{user_id}/marathon", response_model=MarathonOut)
+async def get_marathon(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> MarathonOut:
+    user = await get_user_or_404(user_id, db)
+    return MarathonOut(
+        started=user.marathon_started_at is not None,
+        started_at=user.marathon_started_at,
+        current_day=compute_current_day(user.marathon_started_at),
+    )
+
+
+@router.post("/api/user/{user_id}/marathon/start", response_model=MarathonOut)
+async def post_marathon_start(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> MarathonOut:
+    user = await get_user_or_404(user_id, db)
+    await start_marathon(db, user)
+    return MarathonOut(
+        started=True,
+        started_at=user.marathon_started_at,
+        current_day=compute_current_day(user.marathon_started_at),
     )
