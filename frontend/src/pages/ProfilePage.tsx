@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, ChevronRight, BarChart3, Trophy } from 'lucide-react'
+import { Check, ChevronRight, BarChart3, Trophy, Gift, Copy, Share2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useUserStore, type SubscriptionTier } from '../store/userStore'
@@ -7,6 +7,14 @@ import { Card, Notice, PageHeader, PrimaryButton } from '../components/ui'
 import { track } from '../lib/analytics'
 import { haptic } from '../lib/haptics'
 import { WebApp } from '../lib/telegram'
+
+interface Referral {
+  link: string
+  qualified_count: number
+  gift_level: number
+  next_milestone_count: number | null
+  next_milestone_label: string | null
+}
 
 interface LevelInfo {
   index: number
@@ -62,6 +70,8 @@ export default function ProfilePage() {
   const { id, subscriptionTier, requestsToday } = useUserStore()
   const [notice, setNotice] = useState<string | null>(null)
   const [loyalty, setLoyalty] = useState<Loyalty | null>(null)
+  const [referral, setReferral] = useState<Referral | null>(null)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -69,7 +79,32 @@ export default function ProfilePage() {
       .get<Loyalty>(`/api/user/${id}/loyalty`)
       .then((res) => setLoyalty(res.data))
       .catch(() => {})
+    api
+      .get<Referral>(`/api/user/${id}/referrals`)
+      .then((res) => setReferral(res.data))
+      .catch(() => {})
   }, [id])
+
+  const handleCopyLink = async () => {
+    if (!referral) return
+    haptic('light')
+    await navigator.clipboard.writeText(referral.link)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 1500)
+  }
+
+  const handleShareLink = () => {
+    if (!referral) return
+    haptic('light')
+    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(referral.link)}&text=${encodeURIComponent(
+      'Заходи в Zenit Ai — все топовые ИИ-модели в одном приложении 🚀',
+    )}`
+    if (WebApp) {
+      WebApp.openTelegramLink(shareUrl)
+    } else {
+      window.open(shareUrl, '_blank')
+    }
+  }
 
   const handleUpgrade = (tier: (typeof TIERS)[number]) => {
     haptic('light')
@@ -100,6 +135,48 @@ export default function ProfilePage() {
         <div className="mb-4">
           <Notice tone="amber">{notice}</Notice>
         </div>
+      )}
+
+      {referral && (
+        <Card className="mb-4 text-left">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Приглашайте друзей</p>
+              <h2 className="mt-0.5 text-lg font-bold">Получайте подарки в Telegram</h2>
+            </div>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/10">
+              <Gift size={18} />
+            </div>
+          </div>
+
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            Друг переходит по вашей ссылке и оформляет любую платную подписку — вы получаете настоящий подарок прямо
+            в Telegram. 💝 за 1-го друга, 🏆 за 5-х.
+          </p>
+
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {referral.next_milestone_count
+              ? `${referral.qualified_count} / ${referral.next_milestone_count} друзей с подпиской до подарка ${referral.next_milestone_label}`
+              : `Вы получили все подарки за рефералов — друзей с подпиской: ${referral.qualified_count}`}
+          </p>
+
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gray-100 py-2 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20"
+            >
+              {linkCopied ? <Check size={14} /> : <Copy size={14} />}
+              {linkCopied ? 'Скопировано' : 'Копировать'}
+            </button>
+            <button
+              onClick={handleShareLink}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-black py-2 text-sm font-medium text-white transition-opacity hover:opacity-85 dark:bg-white dark:text-black"
+            >
+              <Share2 size={14} />
+              Поделиться
+            </button>
+          </div>
+        </Card>
       )}
 
       {loyalty && (

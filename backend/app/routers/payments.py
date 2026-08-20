@@ -10,6 +10,7 @@ from app.db import get_db
 from app.models.subscription import Subscription, SubscriptionStatus
 from app.models.user import SubscriptionTier, User
 from app.schemas.payment import SubscriptionOut, TributeWebhookPayload
+from app.services.referral import process_referral_payment
 from app.services.tribute import verify_webhook_signature
 from app.services.user import get_or_create_user
 
@@ -77,6 +78,7 @@ async def tribute_webhook(
     user.subscription_expires_at = data.expires_at
 
     await db.commit()
+    await process_referral_payment(db, user)
     return {"ok": True}
 
 

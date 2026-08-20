@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, Enum, Integer, String, Uuid, func
+from sqlalchemy import BigInteger, DateTime, Enum, ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -43,6 +43,16 @@ class User(Base):
     reward_tier: Mapped[SubscriptionTier | None] = mapped_column(Enum(SubscriptionTier), nullable=True)
     reward_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     reward_video_credits: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Referral program: referred_by_id is set once at signup from the /start
+    # deep-link payload. referral_qualified_at marks the moment *this* user's
+    # first real Tribute payment landed — only then does the referrer get
+    # credit, so a gift always costs less than the revenue that unlocked it.
+    # referral_gift_level is the referrer's last rewarded milestone (idempotent,
+    # same pattern as loyalty_level).
+    referred_by_id: Mapped[uuid.UUID | None] = mapped_column(Uuid, ForeignKey("users.id"), nullable=True)
+    referral_qualified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    referral_gift_level: Mapped[int] = mapped_column(Integer, default=0)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_active: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

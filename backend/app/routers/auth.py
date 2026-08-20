@@ -7,8 +7,10 @@ from app.db import get_db
 from app.deps import get_current_telegram_user, get_user_or_404
 from app.models.user import User
 from app.schemas.loyalty import LevelOut, LoyaltyOut
+from app.schemas.referral import ReferralOut
 from app.schemas.user import SubscriptionOut, UserOut
 from app.services.loyalty import LEVELS, count_generations, has_active_reward, level_for_count, next_level
+from app.services.referral import MILESTONES, count_qualified_referrals, referral_link
 from app.services.user import get_or_create_user
 
 router = APIRouter(tags=["auth"])
@@ -62,4 +64,19 @@ async def get_loyalty(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) ->
             for lvl in LEVELS
             if lvl.index > 0
         ],
+    )
+
+
+@router.get("/api/user/{user_id}/referrals", response_model=ReferralOut)
+async def get_referrals(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> ReferralOut:
+    user = await get_user_or_404(user_id, db)
+    qualified = await count_qualified_referrals(db, user.id)
+    upcoming = next((m for m in MILESTONES if m.referrals_required > qualified), None)
+
+    return ReferralOut(
+        link=referral_link(user.telegram_user_id),
+        qualified_count=qualified,
+        gift_level=user.referral_gift_level,
+        next_milestone_count=upcoming.referrals_required if upcoming else None,
+        next_milestone_label=upcoming.gift_label if upcoming else None,
     )

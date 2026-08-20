@@ -6,6 +6,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.db import async_session
 from app.models.user import User
+from app.services.referral import MILESTONES, count_qualified_referrals, parse_referrer_telegram_id, referral_link
 from app.services.user import get_or_create_user
 
 router = Router()
@@ -14,6 +15,7 @@ HELP_TEXT = (
     "<b>Доступные команды</b>\n\n"
     "/app — открыть приложение\n"
     "/stats — моя статистика и подписка\n"
+    "/invite — пригласить друзей и получить подарок\n"
     "/support &lt;текст&gt; — написать в поддержку\n"
     "/help — это сообщение"
 )
@@ -26,10 +28,16 @@ def _webapp_keyboard() -> InlineKeyboardMarkup:
 
 
 @router.message(Command("start"))
-async def cmd_start(message: Message) -> None:
+async def cmd_start(message: Message, command: CommandObject) -> None:
+    referrer_telegram_id = parse_referrer_telegram_id(command.args)
+
     async with async_session() as db:
         user, is_new = await get_or_create_user(
-            db, message.from_user.id, message.from_user.username, message.from_user.first_name
+            db,
+            message.from_user.id,
+            message.from_user.username,
+            message.from_user.first_name,
+            referrer_telegram_id=referrer_telegram_id,
         )
 
     name = message.from_user.first_name or (f"@{message.from_user.username}" if message.from_user.username else "друг")
@@ -87,6 +95,39 @@ async def cmd_stats(message: Message) -> None:
         f"<b>Действует до:</b> {expires}\n"
         f"<b>Запросов сегодня:</b> {user.requests_today}\n"
         f"<b>Запросов за месяц:</b> {user.requests_month}"
+    )
+    await message.answer(text)
+
+
+@router.message(Command("invite"))
+async def cmd_invite(message: Message) -> None:
+    async with async_session() as db:
+        result = await db.execute(select(User).where(User.telegram_user_id == message.from_user.id))
+        user = result.scalar_one_or_none()
+
+        if user is None:
+            await message.answer("Вы ещё не зарегистрированы. Отправьте /start, чтобы начать.")
+            return
+
+        qualified = await count_qualified_referrals(db, user.id)
+
+    link = referral_link(user.telegram_user_id)
+    next_milestone = next((m for m in MILESTONES if m.referrals_required > qualified), None)
+    progress = (
+        f"До следующего подарка ({next_milestone.gift_label}): "
+        f"{qualified}/{next_milestone.referrals_required} друзей оформили подписку."
+        if next_milestone
+        else f"Вы получили все текущие подарки за рефералов! Друзей с подпиской: {qualified}."
+    )
+
+    text = (
+        "🎁 <b>Приглашайте друзей — получайте подарки в Telegram</b>\n\n"
+        "Когда друг перейдёт по вашей ссылке и оформит любую платную подписку — "
+        "вы получите настоящий подарок прямо в Telegram.\n\n"
+        f"💝 1 друг с подпиской — подарок\n"
+        f"🏆 5 друзей с подпиской — подарок покрупнее\n\n"
+        f"{progress}\n\n"
+        f"Ваша ссылка:\n<code>{link}</code>"
     )
     await message.answer(text)
 
