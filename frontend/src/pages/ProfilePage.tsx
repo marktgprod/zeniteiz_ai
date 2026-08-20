@@ -142,7 +142,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Приглашайте друзей</p>
-              <h2 className="mt-0.5 text-lg font-bold">Получайте подарки в Telegram</h2>
+              <h2 className="mt-0.5 text-lg font-bold">Получайте бонусный доступ</h2>
             </div>
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/10">
               <Gift size={18} />
@@ -150,14 +150,14 @@ export default function ProfilePage() {
           </div>
 
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Друг переходит по вашей ссылке и оформляет любую платную подписку — вы получаете настоящий подарок прямо
-            в Telegram. 💝 за 1-го друга, 🏆 за 5-х.
+            Друг переходит по вашей ссылке и оформляет любую платную подписку — вы получаете бонусные дни
+            расширенного тарифа: 3 дня Pro за 1-го друга, 7 дней VIP за 5-х.
           </p>
 
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             {referral.next_milestone_count
-              ? `${referral.qualified_count} / ${referral.next_milestone_count} друзей с подпиской до подарка ${referral.next_milestone_label}`
-              : `Вы получили все подарки за рефералов — друзей с подпиской: ${referral.qualified_count}`}
+              ? `${referral.qualified_count} / ${referral.next_milestone_count} друзей с подпиской до бонуса «${referral.next_milestone_label}»`
+              : `Вы получили все бонусы за рефералов — друзей с подпиской: ${referral.qualified_count}`}
           </p>
 
           <div className="mt-3 flex gap-2">

@@ -1,21 +1,26 @@
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.api_request import ApiRequest, RequestStatus
 from app.models.user import SubscriptionTier, User
+from app.services.rewards import TIER_RANK, get_effective_tier, grant_tier_boost, has_active_reward
 
 logger = logging.getLogger(__name__)
 
-TIER_RANK = {
-    SubscriptionTier.FREE: 0,
-    SubscriptionTier.STARTER: 1,
-    SubscriptionTier.PRO: 2,
-    SubscriptionTier.VIP: 3,
-}
+__all__ = [
+    "TIER_RANK",
+    "get_effective_tier",
+    "has_active_reward",
+    "LEVELS",
+    "Level",
+    "level_for_count",
+    "next_level",
+    "count_generations",
+    "check_level_up",
+]
 
 
 @dataclass(frozen=True)
@@ -74,25 +79,6 @@ async def count_generations(db: AsyncSession, user_id) -> int:
     return result.scalar_one()
 
 
-def has_active_reward(user: User) -> bool:
-    if not user.reward_tier or not user.reward_expires_at:
-        return False
-    expires_at = user.reward_expires_at
-    if expires_at.tzinfo is None:
-        # SQLite (local dev only — prod Postgres columns are timezone-aware)
-        # drops tzinfo on read; the values are always written in UTC.
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    return expires_at > datetime.now(timezone.utc)
-
-
-def get_effective_tier(user: User) -> SubscriptionTier:
-    """The tier to use for request-limit gating: the higher of the user's real
-    subscription and an active, unexpired loyalty reward boost."""
-    if has_active_reward(user) and TIER_RANK[user.reward_tier] > TIER_RANK[user.subscription_tier]:
-        return user.reward_tier
-    return user.subscription_tier
-
-
 async def check_level_up(db: AsyncSession, user: User) -> None:
     count = await count_generations(db, user.id)
     level = level_for_count(count)
@@ -101,9 +87,7 @@ async def check_level_up(db: AsyncSession, user: User) -> None:
 
     user.loyalty_level = level.index
     if level.reward_tier is not None:
-        user.reward_tier = level.reward_tier
-        user.reward_expires_at = datetime.now(timezone.utc) + timedelta(days=level.reward_days)
-        user.reward_video_credits += level.reward_video_credits
+        grant_tier_boost(user, level.reward_tier, level.reward_days, level.reward_video_credits)
     await db.commit()
 
     await _notify_level_up(user, level)

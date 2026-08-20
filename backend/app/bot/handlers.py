@@ -126,19 +126,18 @@ async def cmd_invite(message: Message) -> None:
     link = referral_link(user.telegram_user_id)
     next_milestone = next((m for m in MILESTONES if m.referrals_required > qualified), None)
     progress = (
-        f"До следующего подарка ({next_milestone.gift_label}): "
+        f"До следующего бонуса ({next_milestone.label}): "
         f"{qualified}/{next_milestone.referrals_required} друзей оформили подписку."
         if next_milestone
-        else f"Вы получили все текущие подарки за рефералов! Друзей с подпиской: {qualified}."
+        else f"Вы получили все текущие бонусы за рефералов! Друзей с подпиской: {qualified}."
     )
 
     text = (
-        "🎁 <b>Приглашайте друзей — получайте подарки в Telegram</b>\n\n"
+        "🎁 <b>Приглашайте друзей — получайте бонусный доступ</b>\n\n"
         "Когда друг перейдёт по вашей ссылке и оформит любую платную подписку — "
-        "вы получите настоящий подарок прямо в Telegram.\n\n"
-        f"💝 1 друг с подпиской — подарок\n"
-        f"🏆 5 друзей с подпиской — подарок покрупнее\n\n"
-        f"{progress}\n\n"
+        "вы получите бонусные дни расширенного тарифа.\n\n"
+        + "\n".join(f"{m.referrals_required} друг(ей) с подпиской — {m.label}" for m in MILESTONES)
+        + f"\n\n{progress}\n\n"
         f"Ваша ссылка:\n<code>{link}</code>"
     )
     await message.answer(text)

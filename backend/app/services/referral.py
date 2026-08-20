@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.user import User
+from app.models.user import SubscriptionTier, User
+from app.services.rewards import grant_tier_boost
 
 logger = logging.getLogger(__name__)
 
@@ -17,17 +18,21 @@ BOT_USERNAME = "zeniteizai_bot"
 class ReferralMilestone:
     index: int
     referrals_required: int
-    gift_id: str
-    gift_label: str
+    tier: SubscriptionTier
+    days: int
+    video_credits: int
+    label: str
 
 
-# The gift only fires once a referred friend actually pays for a subscription
-# via Tribute — never on signup or free-trial usage — so the ~$0.30-$2 cost is
-# always covered by real revenue we just received, and there's no way to farm
-# it with throwaway accounts (a fake account still has to pay real money).
+# The bonus only fires once a referred friend actually pays for a subscription
+# via Tribute — never on signup or free-trial usage — so it's always a
+# retention/upsell mechanic funded by revenue we already received, not
+# something a throwaway account can farm (a fake account still has to pay
+# real money to qualify). Stacks with any active loyalty-level boost via
+# grant_tier_boost rather than overwriting it — see app/services/rewards.py.
 MILESTONES: list[ReferralMilestone] = [
-    ReferralMilestone(1, 1, "5170145012310081615", "💝"),
-    ReferralMilestone(2, 5, "5168043875654172773", "🏆"),
+    ReferralMilestone(1, 1, SubscriptionTier.PRO, 3, 0, "3 дня тарифа Pro"),
+    ReferralMilestone(2, 5, SubscriptionTier.VIP, 7, 3, "7 дней тарифа VIP"),
 ]
 
 
@@ -56,7 +61,7 @@ async def count_qualified_referrals(db: AsyncSession, referrer_id: uuid.UUID) ->
 async def process_referral_payment(db: AsyncSession, user: User) -> None:
     """Call after a real Tribute payment is applied to `user`. If they were
     referred and this is their first paid conversion, credits the referrer
-    and sends a Telegram gift if a milestone was just reached."""
+    and grants a tier-boost bonus if a milestone was just reached."""
     if not user.referred_by_id or user.referral_qualified_at is not None:
         return
 
@@ -71,32 +76,29 @@ async def process_referral_payment(db: AsyncSession, user: User) -> None:
 
     for milestone in MILESTONES:
         if count >= milestone.referrals_required and referrer.referral_gift_level < milestone.index:
-            sent = await _send_gift(referrer, milestone, count)
-            if sent:
-                referrer.referral_gift_level = milestone.index
-                await db.commit()
+            referrer.referral_gift_level = milestone.index
+            grant_tier_boost(referrer, milestone.tier, milestone.days, milestone.video_credits)
+            await db.commit()
+            await _notify_referral_bonus(referrer, milestone, count)
 
 
-async def _send_gift(referrer: User, milestone: ReferralMilestone, count: int) -> bool:
+async def _notify_referral_bonus(referrer: User, milestone: ReferralMilestone, count: int) -> None:
     from app.bot.dispatcher import create_bot
 
+    text = (
+        f"🎉 Спасибо, что делитесь Zenit Ai! Уже {count} друзей оформили подписку по вашей ссылке.\n\n"
+        f"Награда: {milestone.label}.\n\n"
+        "Откройте /app, чтобы воспользоваться."
+    )
     try:
         bot = create_bot()
     except Exception:
-        logger.exception("Failed to create bot to send referral gift to %s", referrer.telegram_user_id)
-        return False
+        logger.exception("Failed to create bot for referral bonus notification to %s", referrer.telegram_user_id)
+        return
 
     try:
-        await bot.send_gift(
-            gift_id=milestone.gift_id,
-            user_id=referrer.telegram_user_id,
-            text=f"🎉 Спасибо, что делитесь Zenit Ai! Уже {count} друзей оформили подписку по вашей ссылке.",
-        )
-        return True
+        await bot.send_message(referrer.telegram_user_id, text)
     except Exception:
-        # Left un-marked (referral_gift_level not bumped) so the next qualifying
-        # referral retries this milestone — e.g. if the bot's Stars balance ran out.
-        logger.exception("Failed to send referral gift to %s", referrer.telegram_user_id)
-        return False
+        logger.exception("Failed to send referral bonus notification to %s", referrer.telegram_user_id)
     finally:
         await bot.session.close()

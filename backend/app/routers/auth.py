@@ -78,5 +78,5 @@ async def get_referrals(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)) 
         qualified_count=qualified,
         gift_level=user.referral_gift_level,
         next_milestone_count=upcoming.referrals_required if upcoming else None,
-        next_milestone_label=upcoming.gift_label if upcoming else None,
+        next_milestone_label=upcoming.label if upcoming else None,
     )
