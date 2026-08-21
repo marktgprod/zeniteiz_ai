@@ -4,7 +4,6 @@ import Layout from './components/Layout'
 import Home from './pages/Home'
 import AiPage from './pages/AiPage'
 import EarnPage from './pages/EarnPage'
-import LeaderboardPage from './pages/LeaderboardPage'
 import PromptsPage from './pages/PromptsPage'
 import NewsPage from './pages/NewsPage'
 import CommunityPage from './pages/CommunityPage'
@@ -29,7 +28,7 @@ export default function App() {
             <Route path="images" element={<Navigate to="/ai" replace />} />
             <Route path="video" element={<Navigate to="/ai" replace />} />
             <Route path="earn" element={<EarnPage />} />
-            <Route path="leaderboard" element={<LeaderboardPage />} />
+            <Route path="leaderboard" element={<Navigate to="/" replace />} />
             <Route path="prompts" element={<PromptsPage />} />
             <Route path="news" element={<NewsPage />} />
             <Route path="community" element={<CommunityPage />} />

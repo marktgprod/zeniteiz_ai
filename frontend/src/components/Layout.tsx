@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Home, Bot, TrendingUp, Crown, Sparkles, Newspaper, Users, User } from 'lucide-react'
+import { Home, Bot, TrendingUp, Sparkles, Newspaper, Users, User } from 'lucide-react'
 import { useUserStore } from '../store/userStore'
 import { useVideoStore } from '../store/videoStore'
 import { useChatStore } from '../store/chatStore'
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { to: '/', labelKey: 'nav.home', end: true, icon: Home },
   { to: '/ai', labelKey: 'nav.ai', icon: Bot },
   { to: '/earn', labelKey: 'nav.earn', icon: TrendingUp },
-  { to: '/leaderboard', labelKey: 'nav.leaderboard', icon: Crown },
   { to: '/prompts', labelKey: 'nav.prompts', icon: Sparkles },
   { to: '/news', labelKey: 'nav.news', icon: Newspaper },
   { to: '/community', labelKey: 'nav.community', icon: Users },
