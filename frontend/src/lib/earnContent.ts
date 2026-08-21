@@ -383,6 +383,100 @@ export const COURSE_LESSONS: CourseLesson[] = [
     tryMode: 'video',
   },
   {
+    id: 'iterative-prompting',
+    title: { ru: 'Итеративный промптинг', en: 'Iterative prompting' },
+    body: {
+      ru: 'Лучший результат редко получается с первого раза — и это нормально. В текстовом чате история сохраняется, поэтому можно просто уточнить: «сделай короче», «добавь больше конкретики», «замени тон на более формальный». Каждое уточнение — это новый шаг диалога, а не новый промпт с нуля.',
+      en: "The best result rarely comes on the first try — and that's normal. Chat history is saved in the text tab, so you can simply refine: \"make it shorter,\" \"add more specifics,\" \"make the tone more formal.\" Each refinement is a new step in the conversation, not a fresh prompt from scratch.",
+    },
+    quizQuestion: { ru: 'Как лучше всего улучшить не совсем точный результат?', en: 'What is the best way to improve a not-quite-right result?' },
+    quizOptions: [
+      { text: { ru: 'Написать уточнение следующим сообщением в этом же чате', en: 'Send a refinement as the next message in the same chat' }, correct: true },
+      { text: { ru: 'Всегда начинать совершенно новый чат с нуля', en: 'Always start a brand new chat from scratch' }, correct: false },
+      { text: { ru: 'Смириться с первым результатом', en: 'Just accept the first result' }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Напиши короткий пост для Instagram про открытие кофейни. Затем, если результат будет слишком длинным, я попрошу сократить — попробуй',
+      en: 'Write a short Instagram post about a coffee shop opening. Keep it brief so we can iterate on tone afterward.',
+    },
+    tryMode: 'text',
+  },
+  {
+    id: 'chat-context',
+    title: { ru: 'Контекст и история переписки', en: 'Context and chat history' },
+    body: {
+      ru: 'Модель «помнит» всё, что было в текущем чате, и использует это как контекст для следующего ответа — это удобно для уточнений, но может мешать, если тема резко меняется: старый контекст иногда «тянет» ответ в прежнюю сторону. Если задача совсем новая и не связана с предыдущей — лучше нажать «Очистить» и начать чат заново.',
+      en: 'The model "remembers" everything in the current chat and uses it as context for the next reply — handy for refinements, but it can get in the way when the topic changes sharply: old context sometimes pulls the answer in the wrong direction. If the task is completely new and unrelated to the previous one, it\'s better to hit "Clear" and start a fresh chat.',
+    },
+    quizQuestion: { ru: 'Когда стоит очистить историю чата?', en: 'When should you clear the chat history?' },
+    quizOptions: [
+      { text: { ru: 'Когда новая задача не связана с предыдущим разговором', en: "When the new task is unrelated to the previous conversation" }, correct: true },
+      { text: { ru: 'Каждое сообщение, всегда', en: 'Every single message, always' }, correct: false },
+      { text: { ru: 'Никогда, история не влияет на ответы', en: "Never — history has no effect on answers" }, correct: false },
+    ],
+  },
+  {
+    id: 'common-mistakes',
+    title: { ru: 'Частые ошибки при промптинге', en: 'Common prompting mistakes' },
+    body: {
+      ru: 'Три самые частые ошибки: слишком общий запрос без деталей («напиши что-нибудь про бизнес»), противоречивые указания в одном промпте («коротко, но подробно обо всём») и отсутствие формата («напиши текст» вместо «3 варианта по 2 предложения»). Каждая мешает модели понять, что именно нужно.',
+      en: 'The three most common mistakes: a too-generic request with no details ("write something about business"), contradictory instructions in one prompt ("short but cover everything in detail"), and no format specified ("write text" instead of "3 variants, 2 sentences each"). Each one makes it harder for the model to know exactly what you need.',
+    },
+    quizQuestion: { ru: 'Какая из этих формулировок — типичная ошибка?', en: 'Which of these is a typical mistake?' },
+    quizOptions: [
+      { text: { ru: '«Коротко, но подробно раскрой абсолютно всё»', en: '"Keep it short, but cover absolutely everything in detail"' }, correct: true },
+      { text: { ru: '«Напиши 3 коротких заголовка, до 50 символов каждый»', en: '"Write 3 short headlines, under 50 characters each"' }, correct: false },
+      { text: { ru: '«Опиши целевую аудиторию продукта X по трём критериям»', en: '"Describe product X\'s target audience across three criteria"' }, correct: false },
+    ],
+  },
+  {
+    id: 'image-iteration',
+    title: { ru: 'Доработка изображений через промпт', en: 'Refining images through the prompt' },
+    body: {
+      ru: 'Прямого редактирования готового изображения в приложении пока нет — но можно «доработать» результат, переформулировав промпт: добавить то, чего не хватало, убрать лишнее словами «без...», уточнить цвет или ракурс. Каждая новая генерация — это новая попытка, поэтому проще всего менять по одному параметру за раз, чтобы понимать, что повлияло на результат.',
+      en: "There's no direct editing of a finished image in the app yet — but you can \"refine\" the result by rewording the prompt: add what was missing, remove something with \"without...\", adjust the color or angle. Each new generation is a fresh attempt, so it's easiest to change one parameter at a time to understand what actually affected the result.",
+    },
+    quizQuestion: { ru: 'Как лучше всего доработать неидеальное изображение?', en: 'What is the best way to refine an imperfect image?' },
+    quizOptions: [
+      { text: { ru: 'Изменить один параметр в промпте и сгенерировать заново', en: 'Change one parameter in the prompt and generate again' }, correct: true },
+      { text: { ru: 'Переписать промпт полностью на случайный текст', en: 'Rewrite the prompt entirely with random text' }, correct: false },
+      { text: { ru: 'Оставить как есть — доработка невозможна', en: "Leave it as is — refinement is impossible" }, correct: false },
+    ],
+    tryPrompt: {
+      ru: 'Логотип для кофейни в стиле минимализм, тёплые тона, плоская векторная графика, без текста, круглая форма',
+      en: 'Logo for a coffee shop, minimalist style, warm tones, flat vector graphics, no text, circular shape',
+    },
+    tryMode: 'image',
+  },
+  {
+    id: 'limits-and-tiers',
+    title: { ru: 'Лимиты и тарифы — как расходовать с умом', en: 'Limits and plans — spending them wisely' },
+    body: {
+      ru: 'Дневной лимит запросов обновляется раз в сутки, а бесплатные видео из наград — конечный ресурс, который не восстанавливается сам. Прежде чем тратить генерацию видео (самую дорогую) — сначала отточите промпт в тексте или картинке, где ошибиться дешевле, а к видео переходите, когда уверены в формулировке.',
+      en: "The daily request limit resets once a day, and free videos from rewards are a finite resource that doesn't refill itself. Before spending a video generation (the most expensive one), polish the prompt in text or image mode first, where mistakes are cheap — move to video once you're confident in the wording.",
+    },
+    quizQuestion: { ru: 'Как разумнее всего использовать лимиты?', en: 'What is the smartest way to use your limits?' },
+    quizOptions: [
+      { text: { ru: 'Отточить промпт в тексте/фото перед дорогой генерацией видео', en: 'Polish the prompt in text/image before an expensive video generation' }, correct: true },
+      { text: { ru: 'Сразу генерировать видео с первой попытки без подготовки', en: 'Generate video right away on the first try with no preparation' }, correct: false },
+      { text: { ru: 'Лимиты не важны, генераций всегда бесконечно много', en: "Limits don't matter, generations are always unlimited" }, correct: false },
+    ],
+  },
+  {
+    id: 'pricing-work',
+    title: { ru: 'Как оценить и продать свою работу', en: 'How to price and sell your work' },
+    body: {
+      ru: 'Скорость ИИ-генерации не означает, что работа должна стоить копейки — клиент платит за результат и ваше время на подбор промпта, доработку и коммуникацию, а не за секунды генерации. Ориентируйтесь на цены из раздела «Гид», но не бойтесь называть цену чуть выше для первых клиентов — портфолио и отзывы важнее, чем самая низкая цена на рынке.',
+      en: "AI generation being fast doesn't mean the work should be priced for pennies — the client pays for the result and your time spent refining the prompt and communicating, not for generation seconds. Use the prices in the Guide tab as a baseline, but don't be afraid to price slightly higher for your first clients — a portfolio and reviews matter more than being the cheapest option on the market.",
+    },
+    quizQuestion: { ru: 'За что на самом деле платит клиент?', en: 'What is the client actually paying for?' },
+    quizOptions: [
+      { text: { ru: 'За результат и ваше время на подбор и доработку', en: 'For the result and your time spent refining it' }, correct: true },
+      { text: { ru: 'Только за секунды работы модели', en: "Only for the model's generation seconds" }, correct: false },
+      { text: { ru: 'Ни за что — работу нужно делать бесплатно', en: "Nothing — the work should be done for free" }, correct: false },
+    ],
+  },
+  {
     id: 'putting-it-together',
     title: { ru: 'От идеи до результата', en: 'From idea to result' },
     body: {
