@@ -6,7 +6,10 @@ import { translate } from '../lib/i18n'
 import { useUserStore } from '../store/userStore'
 
 const POLL_INTERVAL_MS = 4000
-const MAX_POLL_ATTEMPTS = 90 // ~6 minutes — generations normally finish in under a minute
+// ~15 minutes. Generations usually finish in under a minute, but a real request
+// was observed taking 416s (~7 min) and still succeeding — the old 6-minute cap
+// was giving up on generations that were about to complete.
+const MAX_POLL_ATTEMPTS = 225
 
 type VideoStatus = 'idle' | 'pending' | 'completed' | 'error'
 
